@@ -116,6 +116,7 @@ html,body{width:100%;height:100%;overflow:hidden;
 #board{display:grid;gap:3px;padding:6px;border-radius:var(--r);background:rgba(0,0,0,.35);border:1px solid var(--border);touch-action:none}
 .c{border-radius:var(--rs);display:flex;align-items:center;justify-content:center;
   transition:transform .15s ease,opacity .2s ease,box-shadow .3s ease;cursor:pointer;position:relative;aspect-ratio:1}
+.c.empty{background:transparent!important;pointer-events:none}
 .c.sel{transform:scale(1.15);z-index:5;box-shadow:0 0 18px rgba(255,255,255,.4)}
 .c.hint{animation:hg .8s ease-in-out infinite}
 .c.pop{animation:mp .28s ease forwards}
@@ -932,11 +933,15 @@ const renderBoard = () => {
     for(let c=0;c<NC;c++){
       const el=document.createElement('div');
       const g=B[r][c];
-      el.className=`c g${g.t}`;
-      if(g.sp) el.dataset.sp=g.sp;
+      if(g){
+        el.className=`c g${g.t}`;
+        if(g.sp) el.dataset.sp=g.sp;
+        el.textContent=EMOJI[g.t];
+        el.style.fontSize=(cs*.45)+'px';
+      } else {
+        el.className='c empty';
+      }
       el.dataset.r=r; el.dataset.c=c;
-      el.textContent=EMOJI[g.t];
-      el.style.fontSize=(cs*.45)+'px';
       el.addEventListener('pointerdown',onDown);
       el.addEventListener('pointerup',onUp);
       el.addEventListener('pointermove',onMove);
