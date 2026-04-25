@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a1a">
+<title>Jewel Blitz — Premium Match-3</title>
+<style>
+/* =====================================================
+   JEWEL BLITZ — Full Premium Mobile Web Game
+   Single-file HTML/CSS/JS — No external dependencies
+   ===================================================== */
+
+/* ===== RESET & GLOBAL ===== */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{width:100%;height:100%;overflow:hidden;
+  font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:#0a0a1a;color:#fff;touch-action:none;
+  overscroll-behavior:none;position:fixed;top:0;left:0}
+
+/* ===== CSS CUSTOM PROPERTIES ===== */
+:root{
+  --pri:#00e5ff;--sec:#7c4dff;--acc:#ff4081;--gold:#ffd740;--green:#00e676;
+  --bg:#0a0a1a;--bg-card:rgba(255,255,255,.06);--bg-glass:rgba(255,255,255,.08);
+  --border:rgba(255,255,255,.12);--shadow-neon:0 0 20px rgba(0,229,255,.3);
+  --dim:rgba(255,255,255,.5);--r:16px;--rs:10px;
+  --ease:cubic-bezier(.4,0,.2,1);--t:.3s var(--ease)
+}
+
+/* ===== ANIMATED AURORA BACKGROUND ===== */
+#aurora{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ===== SCREEN SYSTEM ===== */
+.scr{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;opacity:0;pointer-events:none;
+  transition:opacity .45s ease,transform .45s ease;transform:scale(.97)}
+.scr.on{opacity:1;pointer-events:all;transform:scale(1)}
+
+/* ===== SPLASH ===== */
+#splash{z-index:100;background:radial-gradient(ellipse at 50% 35%,#151538,#0a0a1a 70%)}
+.sp-logo{font-size:clamp(2.4em,8vw,3.6em);font-weight:900;
+  background:linear-gradient(135deg,var(--pri),var(--sec),var(--acc));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:pulse 2s ease-in-out infinite;letter-spacing:3px;text-align:center}
+.sp-sub{color:var(--dim);margin-top:6px;font-size:.82em;letter-spacing:5px;text-transform:uppercase}
+.sp-bar-wrap{margin-top:36px;width:220px;height:4px;background:var(--bg-glass);border-radius:4px;overflow:hidden}
+.sp-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--pri),var(--sec));border-radius:4px;transition:width .25s ease}
+.sp-tip{margin-top:18px;font-size:.68em;color:var(--dim);text-align:center;max-width:260px;line-height:1.5}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+
+/* ===== GLASS & BUTTONS ===== */
+.gl{background:var(--bg-glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:var(--r)}
+.gl-s{background:var(--bg-glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:var(--rs)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 30px;border:none;border-radius:var(--r);font-size:.95em;font-weight:700;
+  cursor:pointer;transition:var(--t);text-transform:uppercase;letter-spacing:1px;
+  position:relative;overflow:hidden;outline:none;-webkit-appearance:none}
+.btn:active{transform:scale(.94)}
+.bp{background:linear-gradient(135deg,var(--pri),var(--sec));color:#fff;box-shadow:0 4px 20px rgba(0,229,255,.3)}
+.ba{background:linear-gradient(135deg,var(--acc),#ff6e40);color:#fff;box-shadow:0 4px 20px rgba(255,64,129,.3)}
+.bg{background:linear-gradient(135deg,var(--gold),#ff9100);color:#1a1a1a;box-shadow:0 4px 20px rgba(255,215,64,.3)}
+.bo{background:transparent;border:1px solid var(--border);color:#fff}
+.bo:active{background:var(--bg-glass)}
+.bsm{padding:10px 18px;font-size:.82em;border-radius:var(--rs)}
+.bic{width:46px;height:46px;padding:0;border-radius:50%;font-size:1.15em}
+.bbl{width:100%;max-width:320px}
+
+/* ===== HEADER BAR (re-used) ===== */
+.hdr{position:absolute;top:0;left:0;right:0;padding:12px 14px;display:flex;align-items:center;z-index:20}
+.hdr-back{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:1.05em;cursor:pointer;background:var(--bg-glass);border:1px solid var(--border);transition:var(--t)}
+.hdr-back:active{transform:scale(.88)}
+.hdr-title{flex:1;text-align:center;font-weight:700;font-size:.95em;margin-right:38px}
+
+/* ===== MAIN MENU ===== */
+#menu{background:transparent}
+.m-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px;width:100%;max-width:380px}
+.m-title{font-size:clamp(2em,7vw,2.8em);font-weight:900;
+  background:linear-gradient(135deg,var(--pri),var(--acc));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.m-sub{color:var(--dim);font-size:.72em;letter-spacing:4px;text-transform:uppercase;margin-bottom:14px}
+.m-stats{display:flex;gap:14px;margin-bottom:10px}
+.m-st{text-align:center;padding:12px 16px}
+.m-sv{font-size:1.35em;font-weight:800;color:var(--gold)}
+.m-sl{font-size:.6em;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:3px}
+.m-btns{display:flex;flex-direction:column;gap:9px;width:100%;align-items:center}
+.m-bot{display:flex;gap:9px;margin-top:12px}
+
+/* ===== GAME HUD ===== */
+#game{background:transparent}
+.g-hud{position:absolute;top:0;left:0;right:0;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;z-index:20}
+.g-hl,.g-hr{display:flex;align-items:center;gap:8px}
+.g-score{font-size:1.25em;font-weight:800;color:var(--gold)}
+.g-lv{font-size:.72em;color:var(--dim);font-weight:600}
+.g-moves{display:flex;align-items:center;gap:4px;font-weight:700;font-size:1.05em}
+.g-moves span{color:var(--acc)}
+.g-tgt{display:flex;align-items:center;gap:5px;font-size:.75em;color:var(--dim)}
+.g-tv{color:var(--pri);font-weight:700;font-size:1em}
+
+/* Progress bar */
+.pbar{position:absolute;top:48px;left:14px;right:14px;height:5px;background:var(--bg-glass);border-radius:4px;z-index:20;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--pri),var(--gold));border-radius:4px;transition:width .4s ease;width:0%}
+.stars-m{position:absolute;inset:0;display:flex;align-items:center}
+.star-m{position:absolute;width:14px;height:14px;font-size:8px;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);border:2px solid var(--gold);border-radius:50%;transform:translateX(-50%);transition:var(--t)}
+.star-m.got{background:var(--gold);box-shadow:0 0 8px rgba(255,215,64,.5)}
+
+/* ===== GAME BOARD ===== */
+.b-wrap{position:absolute;top:65px;left:0;right:0;bottom:58px;display:flex;align-items:center;justify-content:center;padding:6px}
+#board{display:grid;gap:3px;padding:6px;border-radius:var(--r);background:rgba(0,0,0,.35);border:1px solid var(--border);touch-action:none}
+.c{border-radius:var(--rs);display:flex;align-items:center;justify-content:center;
+  transition:transform .15s ease,opacity .2s ease,box-shadow .3s ease;cursor:pointer;position:relative;aspect-ratio:1}
+.c.empty{background:transparent!important;pointer-events:none}
+.c.sel{transform:scale(1.15);z-index:5;box-shadow:0 0 18px rgba(255,255,255,.4)}
+.c.hint{animation:hg .8s ease-in-out infinite}
+.c.pop{animation:mp .28s ease forwards}
+.c.spawn{animation:si .28s ease forwards}
+@keyframes hg{0%,100%{box-shadow:0 0 4px rgba(255,215,64,.3)}50%{box-shadow:0 0 22px rgba(255,215,64,.8)}}
+@keyframes mp{0%{transform:scale(1);opacity:1}50%{transform:scale(1.35)}100%{transform:scale(0);opacity:0}}
+@keyframes si{0%{transform:scale(0) rotate(90deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+
+/* Gem gradients */
+.g0{background:linear-gradient(135deg,#ff1744,#d50000);box-shadow:inset 0 2px 4px rgba(255,255,255,.3),0 2px 8px rgba(255,23,68,.35)}
+.g1{background:linear-gradient(135deg,#00e676,#00c853);box-shadow:inset 0 2px 4px rgba(255,255,255,.3),0 2px 8px rgba(0,230,118,.35)}
+.g2{background:linear-gradient(135deg,#448aff,#2962ff);box-shadow:inset 0 2px 4px rgba(255,255,255,.3),0 2px 8px rgba(41,121,255,.35)}
+.g3{background:linear-gradient(135deg,#ffea00,#ffd600);box-shadow:inset 0 2px 4px rgba(255,255,255,.3),0 2px 8px rgba(255,234,0,.35)}
+.g4{background:linear-gradient(135deg,#e040fb,#aa00ff);box-shadow:inset 0 2px 4px rgba(255,255,255,.3),0 2px 8px rgba(224,64,251,.35)}
+.g5{background:linear-gradient(135deg,#ff9100,#ff6d00);box-shadow:inset 0 2px 4px rgba(255,255,255,.3),0 2px 8px rgba(255,145,0,.35)}
+.g6{background:linear-gradient(135deg,#00e5ff,#00b8d4);box-shadow:inset 0 2px 4px rgba(255,255,255,.3),0 2px 8px rgba(0,229,255,.35)}
+
+/* Special gem badges */
+.c[data-sp="bomb"]::after{content:'💣';position:absolute;font-size:.55em;bottom:1px;right:1px;filter:drop-shadow(0 0 3px #000)}
+.c[data-sp="lightning"]::after{content:'⚡';position:absolute;font-size:.55em;bottom:1px;right:1px;filter:drop-shadow(0 0 3px #000)}
+.c[data-sp="star"]::after{content:'🌟';position:absolute;font-size:.55em;bottom:1px;right:1px;filter:drop-shadow(0 0 3px #000)}
+.c[data-sp="color"]::after{content:'🌈';position:absolute;font-size:.55em;bottom:1px;right:1px;filter:drop-shadow(0 0 3px #000)}
+
+/* ===== POWER-UP BAR ===== */
+.pu-bar{position:absolute;bottom:0;left:0;right:0;padding:6px 14px;display:flex;align-items:center;justify-content:center;gap:10px;z-index:20}
+.pu{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:1.2em;cursor:pointer;position:relative;transition:var(--t);
+  border:2px solid var(--border);background:var(--bg-glass)}
+.pu:active{transform:scale(.88)}
+.pu.off{opacity:.25;pointer-events:none}
+.pu-n{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;
+  background:var(--acc);color:#fff;font-size:.5em;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px}
+
+/* ===== COMBO / SCORE FLOATERS ===== */
+.combo{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2.4em;
+  font-weight:900;pointer-events:none;z-index:55;opacity:0;text-shadow:0 0 25px currentColor}
+.combo.on{animation:cShow .85s ease forwards}
+@keyframes cShow{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}
+  40%{transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
+.sfloat{position:absolute;font-size:1em;font-weight:800;color:var(--gold);pointer-events:none;z-index:35;text-shadow:0 0 8px rgba(255,215,64,.4)}
+.sfloat.on{animation:sf .75s ease forwards}
+@keyframes sf{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-35px) scale(1.2)}}
+
+/* ===== LEVEL SELECT ===== */
+#levels{background:transparent}
+.lv-wrap{width:100%;max-width:400px;padding:18px;display:flex;flex-direction:column;align-items:center;max-height:100vh;overflow-y:auto;padding-top:56px}
+.lv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;width:100%;padding:8px}
+.lv-btn{aspect-ratio:1;border-radius:var(--rs);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:1.15em;font-weight:800;cursor:pointer;transition:var(--t);border:none}
+.lv-btn.unlocked{background:linear-gradient(135deg,rgba(0,229,255,.12),rgba(124,77,255,.12));border:1px solid var(--border);color:#fff}
+.lv-btn.unlocked:active{transform:scale(.9)}
+.lv-btn.locked{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.18);pointer-events:none}
+.lv-btn.cur{background:linear-gradient(135deg,var(--pri),var(--sec));color:#fff;box-shadow:var(--shadow-neon)}
+.lv-stars{display:flex;gap:1px;font-size:.35em;margin-top:2px}
+
+/* ===== SHOP ===== */
+#shop{background:transparent}
+.sh-wrap{width:100%;max-width:400px;padding:18px;display:flex;flex-direction:column;align-items:center;max-height:100vh;overflow-y:auto;padding-top:56px}
+.sh-coins{display:flex;align-items:center;gap:5px;font-size:1.05em;font-weight:700;color:var(--gold);margin-bottom:18px}
+.sh-list{display:flex;flex-direction:column;gap:10px;width:100%}
+.sh-item{padding:14px;display:flex;align-items:center;gap:12px;transition:var(--t)}
+.sh-ico{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4em;background:var(--bg-glass);flex-shrink:0}
+.sh-info{flex:1}
+.sh-name{font-weight:700;font-size:.9em}
+.sh-desc{font-size:.65em;color:var(--dim);margin-top:2px}
+
+/* ===== STATS ===== */
+#stats{background:transparent}
+.st-wrap{width:100%;max-width:400px;padding:18px;display:flex;flex-direction:column;align-items:center;max-height:100vh;overflow-y:auto;padding-top:56px}
+.st-row{width:100%;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.st-l{color:var(--dim);font-size:.85em}
+.st-v{font-weight:700;font-size:.95em}
+.ach-t{font-size:1.15em;font-weight:700;margin:18px 0 10px;color:var(--gold)}
+.ach{width:100%;padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.ach-ico{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1em;background:var(--bg-glass)}
+.ach.got .ach-ico{background:linear-gradient(135deg,var(--gold),#ff9100)}
+.ach-info{flex:1}
+.ach-name{font-weight:700;font-size:.8em}
+.ach-desc{font-size:.65em;color:var(--dim);margin-top:2px}
+.ach-bar{height:4px;background:var(--bg-glass);border-radius:4px;margin-top:5px;overflow:hidden}
+.ach-fill{height:100%;background:linear-gradient(90deg,var(--pri),var(--gold));border-radius:4px;transition:width .4s ease}
+
+/* ===== SETTINGS ===== */
+#settings{background:transparent}
+.set-wrap{width:100%;max-width:400px;padding:18px;display:flex;flex-direction:column;align-items:center;padding-top:56px}
+.set-row{width:100%;padding:15px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.set-label{font-size:.9em}
+.tog{width:50px;height:26px;border-radius:13px;background:rgba(255,255,255,.15);position:relative;cursor:pointer;transition:var(--t)}
+.tog.on{background:var(--pri)}
+.tog-k{width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:var(--t);box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.tog.on .tog-k{left:26px}
+
+/* ===== DAILY REWARD ===== */
+#daily{z-index:80;background:rgba(0,0,0,.7)}
+.d-wrap{padding:28px;text-align:center;max-width:340px;width:90%}
+.d-title{font-size:1.5em;font-weight:800;margin-bottom:5px;background:linear-gradient(135deg,var(--gold),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.d-sub{color:var(--dim);font-size:.75em;margin-bottom:18px}
+.d-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:18px}
+.d-day{padding:9px 3px;border-radius:var(--rs);text-align:center;font-size:.6em;border:1px solid var(--border)}
+.d-day.claimed{background:linear-gradient(135deg,var(--pri),var(--sec));border-color:transparent}
+.d-day.today{border-color:var(--gold);box-shadow:0 0 10px rgba(255,215,64,.35)}
+.d-num{font-weight:700;margin-bottom:2px}
+.d-rw{color:var(--gold);font-weight:800}
+
+/* ===== WEEKLY CHALLENGES ===== */
+#challenge{z-index:75;background:rgba(0,0,0,.7)}
+.ch-wrap{padding:28px;text-align:center;max-width:340px;width:90%}
+.ch-title{font-size:1.3em;font-weight:800;margin-bottom:14px;color:var(--acc)}
+.ch-item{padding:11px;margin-bottom:7px;display:flex;align-items:center;gap:9px;text-align:left}
+.ch-ico{font-size:1.2em;flex-shrink:0}
+.ch-info{flex:1}
+.ch-name{font-weight:700;font-size:.8em}
+.ch-bar{height:4px;background:var(--bg-glass);border-radius:4px;margin-top:5px;overflow:hidden}
+.ch-fill{height:100%;background:linear-gradient(90deg,var(--acc),var(--gold));border-radius:4px}
+.ch-rw{font-size:.75em;color:var(--gold);font-weight:700;flex-shrink:0}
+
+/* ===== TUTORIAL ===== */
+#tutorial{z-index:85;background:rgba(0,0,0,.8)}
+.tu-wrap{padding:28px;text-align:center;max-width:340px;width:90%}
+.tu-title{font-size:1.4em;font-weight:800;margin-bottom:8px;color:var(--pri)}
+.tu-text{font-size:.85em;color:var(--dim);line-height:1.6;margin-bottom:18px}
+.tu-step{display:none}
+.tu-step.on{display:block}
+.tu-dots{display:flex;gap:6px;justify-content:center;margin-bottom:18px}
+.tu-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2)}
+.tu-dot.on{background:var(--pri)}
+
+/* ===== OVERLAY (Win/Lose/Pause) ===== */
+#overlay{z-index:60;background:rgba(0,0,0,.78)}
+.ov-wrap{padding:28px;text-align:center;max-width:340px;width:90%}
+.ov-title{font-size:1.9em;font-weight:900;margin-bottom:6px}
+.ov-title.win{background:linear-gradient(135deg,var(--gold),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ov-title.lose{color:var(--acc)}
+.ov-stars{font-size:2.1em;margin:10px 0;letter-spacing:5px}
+.ov-score{font-size:1.2em;font-weight:700;color:var(--gold);margin-bottom:4px}
+.ov-det{font-size:.75em;color:var(--dim);margin-bottom:18px}
+.ov-btns{display:flex;flex-direction:column;gap:9px;align-items:center}
+
+/* ===== PARTICLES ===== */
+.ptc{position:fixed;pointer-events:none;z-index:90;border-radius:50%}
+
+/* ===== TOAST NOTIFICATIONS ===== */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  padding:10px 22px;border-radius:var(--r);font-size:.8em;font-weight:700;z-index:95;
+  opacity:0;transition:all .35s ease;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-success{background:rgba(0,230,118,.9);color:#000}
+.toast-warn{background:rgba(255,145,0,.9);color:#000}
+.toast-info{background:rgba(0,229,255,.9);color:#000}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ===== LANDSCAPE WARNING ===== */
+@media (orientation:landscape) and (max-height:500px){
+  .b-wrap{top:55px;bottom:50px}
+  .g-hud{padding:6px 10px}
+  .pbar{top:38px}
+  .pu-bar{padding:4px 10px}
+  .pu{width:38px;height:38px;font-size:1em}
+}
+</style>
+</head>
+<body>
+
+<!-- Aurora Background -->
+<canvas id="aurora"></canvas>
+
+<!-- Splash -->
+<div id="splash" class="scr on">
+  <div class="sp-logo">JEWEL BLITZ</div>
+  <div class="sp-sub">Premium Match-3</div>
+  <div class="sp-bar-wrap"><div class="sp-bar" id="sp-bar"></div></div>
+  <div class="sp-tip" id="sp-tip">Loading game assets...</div>
+</div>
+
+<!-- Tutorial -->
+<div id="tutorial" class="scr">
+  <div class="tu-wrap gl">
+    <div class="tu-title" id="tu-title">How to Play</div>
+    <div id="tu-steps"></div>
+    <div class="tu-dots" id="tu-dots"></div>
+    <button class="btn bp bbl" id="tu-btn" onclick="tutorialNext()">NEXT</button>
+  </div>
+</div>
+
+<!-- Daily Reward -->
+<div id="daily" class="scr">
+  <div class="d-wrap gl">
+    <div class="d-title">🎁 Daily Reward</div>
+    <div class="d-sub">Come back every day for bigger rewards!</div>
+    <div class="d-grid" id="d-days"></div>
+    <button class="btn bg bbl" id="d-claim">CLAIM REWARD</button>
+  </div>
+</div>
+
+<!-- Weekly Challenge -->
+<div id="challenge" class="scr">
+  <div class="ch-wrap gl">
+    <div class="ch-title">🏆 Weekly Challenges</div>
+    <div id="ch-list"></div>
+    <button class="btn bo bbl" onclick="nav('menu')" style="margin-top:14px">CLOSE</button>
+  </div>
+</div>
+
+<!-- Main Menu -->
+<div id="menu" class="scr">
+  <div class="m-wrap">
+    <div class="m-title">JEWEL BLITZ</div>
+    <div class="m-sub">Match & Conquer</div>
+    <div class="m-stats gl" id="m-stats">
+      <div class="m-st"><div class="m-sv" id="ms-lv">1</div><div class="m-sl">Level</div></div>
+      <div class="m-st"><div class="m-sv" id="ms-sc">0</div><div class="m-sl">Best</div></div>
+      <div class="m-st"><div class="m-sv" id="ms-co">0</div><div class="m-sl">Coins</div></div>
+    </div>
+    <div class="m-btns">
+      <button class="btn bp bbl" onclick="play()">▶  PLAY</button>
+      <button class="btn ba bbl" onclick="nav('levels')">📋  LEVELS</button>
+      <button class="btn bg bbl" onclick="nav('shop')">🛒  SHOP</button>
+      <button class="btn bo bbl" onclick="nav('stats')">📊  STATS</button>
+    </div>
+    <div class="m-bot">
+      <button class="btn bic bo" onclick="nav('settings')">⚙️</button>
+      <button class="btn bic bo" onclick="openDaily()">🎁</button>
+      <button class="btn bic bo" onclick="openChallenge()">🏆</button>
+    </div>
+  </div>
+</div>
+
+<!-- Game Screen -->
+<div id="game" class="scr">
+  <div class="g-hud">
+    <div class="g-hl">
+      <button class="btn bic bo bsm" onclick="pause()" style="width:34px;height:34px;font-size:.85em">⏸</button>
+      <div><div class="g-score" id="g-sc">0</div><div class="g-lv" id="g-lv">Level 1</div></div>
+    </div>
+    <div class="g-hr">
+      <div class="g-tgt">Target: <span class="g-tv" id="g-tg">1000</span></div>
+      <div class="g-moves">🔄 <span id="g-mv">20</span></div>
+    </div>
+  </div>
+  <div class="pbar"><div class="pfill" id="pfill"></div>
+    <div class="stars-m">
+      <div class="star-m" id="s1" style="left:33%">⭐</div>
+      <div class="star-m" id="s2" style="left:66%">⭐</div>
+      <div class="star-m" id="s3" style="left:95%">⭐</div>
+    </div>
+  </div>
+  <div class="b-wrap"><div id="board"></div></div>
+  <div class="pu-bar">
+    <div class="pu" onclick="usePU('bomb')" id="pb"><span>💣</span><span class="pu-n" id="pb-n">3</span></div>
+    <div class="pu" onclick="usePU('shuffle')" id="ps"><span>🔀</span><span class="pu-n" id="ps-n">2</span></div>
+    <div class="pu" onclick="usePU('hint')" id="ph"><span>💡</span><span class="pu-n" id="ph-n">5</span></div>
+    <div class="pu" onclick="usePU('lightning')" id="pl"><span>⚡</span><span class="pu-n" id="pl-n">1</span></div>
+    <div class="pu" onclick="usePU('color')" id="pc"><span>🌈</span><span class="pu-n" id="pc-n">1</span></div>
+  </div>
+</div>
+
+<!-- Level Select -->
+<div id="levels" class="scr">
+  <div class="hdr"><div class="hdr-back" onclick="nav('menu')">←</div><div class="hdr-title">Select Level</div></div>
+  <div class="lv-wrap"><div class="lv-grid" id="lv-grid"></div></div>
+</div>
+
+<!-- Shop -->
+<div id="shop" class="scr">
+  <div class="hdr"><div class="hdr-back" onclick="nav('menu')">←</div><div class="hdr-title">Power-Up Shop</div></div>
+  <div class="sh-wrap">
+    <div class="sh-coins">🪙 <span id="sh-co">0</span></div>
+    <div class="sh-list" id="sh-list"></div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div id="stats" class="scr">
+  <div class="hdr"><div class="hdr-back" onclick="nav('menu')">←</div><div class="hdr-title">Statistics</div></div>
+  <div class="st-wrap" id="st-body"></div>
+</div>
+
+<!-- Settings -->
+<div id="settings" class="scr">
+  <div class="hdr"><div class="hdr-back" onclick="nav('menu')">←</div><div class="hdr-title">Settings</div></div>
+  <div class="set-wrap">
+    <div class="set-row gl"><span class="set-label">🔊 Sound Effects</span><div class="tog on" id="t-sfx" onclick="togSet('sfx')"><div class="tog-k"></div></div></div>
+    <div class="set-row gl"><span class="set-label">🎵 Music</span><div class="tog on" id="t-mus" onclick="togSet('music')"><div class="tog-k"></div></div></div>
+    <div class="set-row gl"><span class="set-label">📳 Vibration</span><div class="tog on" id="t-vib" onclick="togSet('vibrate')"><div class="tog-k"></div></div></div>
+    <div class="set-row gl"><span class="set-label">✨ Particles</span><div class="tog on" id="t-ptc" onclick="togSet('particles')"><div class="tog-k"></div></div></div>
+    <div class="set-row gl"><span class="set-label">🖥 Dark Board</span><div class="tog" id="t-dboard" onclick="togSet('darkBoard')"><div class="tog-k"></div></div></div>
+    <button class="btn ba bbl" onclick="resetAll()" style="margin-top:18px">🗑 Reset Progress</button>
+    <div style="margin-top:20px;font-size:.6em;color:var(--dim)">Jewel Blitz v2.0 — Made with ❤️</div>
+  </div>
+</div>
+
+<!-- Overlay (Win/Lose/Pause) -->
+<div id="overlay" class="scr">
+  <div class="ov-wrap gl" id="ov-body"></div>
+</div>
+
+<!-- Combo Text -->
+<div class="combo" id="combo"></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===========================================================================
+   JEWEL BLITZ v2.0 — PREMIUM MATCH-3 GAME ENGINE
+   Complete single-file game: State, Board, Input, FX, Audio, Save/Load
+   =========================================================================== */
+
+// =============================== CONSTANTS ===============================
+const GEMS = 7;
+const EMOJI = ['💎','🟢','🔵','🟡','🟣','🟠','🩵'];
+const GCOL  = ['#ff1744','#00e676','#448aff','#ffea00','#e040fb','#ff9100','#00e5ff'];
+const TIPS  = [
+  'Swipe or tap two adjacent gems to swap them!',
+  'Match 4 gems for a Lightning gem ⚡',
+  'Match 5 gems for a Star gem 🌟',
+  'Use power-ups wisely to reach the target score!',
+  'Complete daily challenges for bonus coins 🪙',
+  'Build combos for multiplied points!',
+  'Each level gets harder — can you beat them all?'
+];
+const TUTORIAL_STEPS = [
+  { title:'Welcome!', text:'Jewel Blitz is a match-3 puzzle game.<br><br>Swap adjacent gems to create lines of 3 or more matching gems.' },
+  { title:'Swipe or Tap', text:'<b>Swipe</b> a gem in any direction, or <b>tap</b> two adjacent gems to swap them.' },
+  { title:'Special Gems', text:'Match <b>4 gems</b> → Lightning ⚡ (clears row)<br>Match <b>5 gems</b> → Star 🌟 (clears all of that color)<br>L/T shape → Bomb 💣 (3×3 explosion)' },
+  { title:'Power-Ups', text:'Use power-ups from the bottom bar:<br>💣 Bomb • 🔀 Shuffle • 💡 Hint<br>⚡ Lightning • 🌈 Color Bomb<br><br>Buy more in the Shop!' },
+  { title:'Goals', text:'Reach the <b>target score</b> before running out of moves.<br>Earn ⭐⭐⭐ stars and unlock new levels!<br><br>Good luck! 🎮' },
+];
+
+// Power-up definitions
+const PU_DEF = {
+  bomb:      { name:'Bomb',       emoji:'💣', desc:'Destroy 3×3 area',      price:50,  qty:3 },
+  shuffle:   { name:'Shuffle',    emoji:'🔀', desc:'Randomize the board',   price:30,  qty:3 },
+  hint:      { name:'Hint',       emoji:'💡', desc:'Show a valid move',     price:20,  qty:5 },
+  lightning: { name:'Lightning',  emoji:'⚡', desc:'Clear entire row',      price:80,  qty:2 },
+  color:     { name:'Color Bomb', emoji:'🌈', desc:'Remove one gem color',  price:120, qty:1 },
+};
+
+// Shop items
+const SHOP = [
+  { id:'bomb3',    pu:'bomb',      emoji:'💣', name:'Bomb ×3',          desc:'Destroy a 3×3 area',        price:50,  qty:3 },
+  { id:'shuf3',    pu:'shuffle',   emoji:'🔀', name:'Shuffle ×3',      desc:'Randomize all gems',        price:30,  qty:3 },
+  { id:'hint5',    pu:'hint',      emoji:'💡', name:'Hint ×5',         desc:'Reveal a valid move',       price:20,  qty:5 },
+  { id:'light2',   pu:'lightning', emoji:'⚡', name:'Lightning ×2',    desc:'Clear an entire row',       price:80,  qty:2 },
+  { id:'color1',   pu:'color',     emoji:'🌈', name:'Color Bomb ×1',   desc:'Remove one color entirely', price:120, qty:1 },
+  { id:'megab1',   pu:'bomb',      emoji:'🧨', name:'Mega Bomb ×1',    desc:'Destroy 5×5 area',          price:200, qty:1 },
+  { id:'moves5',   pu:'_moves',    emoji:'🔄', name:'+5 Moves',        desc:'Extra moves mid-game',      price:100, qty:5 },
+  { id:'coin200',  pu:'_coin',     emoji:'💰', name:'Coin Pack (200)', desc:'Instant 200 coins',         price:0,   qty:200, special:'ad' },
+];
+
+// Achievements
+const ACHS = [
+  { id:'fm',  name:'First Match',    desc:'Make your first match',  icon:'⭐', tgt:1,     stat:'totMatch' },
+  { id:'m100',name:'Match Master',   desc:'Make 100 matches',       icon:'🔥', tgt:100,   stat:'totMatch' },
+  { id:'m500',name:'Match Legend',   desc:'Make 500 matches',       icon:'👑', tgt:500,   stat:'totMatch' },
+  { id:'m2k', name:'Match God',      desc:'Make 2000 matches',      icon:'💫', tgt:2000,  stat:'totMatch' },
+  { id:'c3',  name:'Combo Starter',  desc:'Get a 3× combo',         icon:'💥', tgt:3,     stat:'maxCombo' },
+  { id:'c5',  name:'Combo King',     desc:'Get a 5× combo',         icon:'🌟', tgt:5,     stat:'maxCombo' },
+  { id:'c8',  name:'Combo God',      desc:'Get an 8× combo',        icon:'🔮', tgt:8,     stat:'maxCombo' },
+  { id:'s10', name:'Score Hunter',   desc:'Score 10,000',           icon:'🎯', tgt:10000, stat:'bestScore' },
+  { id:'s50', name:'Score Master',   desc:'Score 50,000',           icon:'🏅', tgt:50000, stat:'bestScore' },
+  { id:'s100',name:'Score Legend',   desc:'Score 100,000',          icon:'💎', tgt:100000,stat:'bestScore' },
+  { id:'l5',  name:'Rising Star',    desc:'Reach level 5',          icon:'📈', tgt:5,     stat:'maxLv' },
+  { id:'l10', name:'Veteran',        desc:'Reach level 10',         icon:'🎖',  tgt:10,    stat:'maxLv' },
+  { id:'l25', name:'Champion',       desc:'Reach level 25',         icon:'🏆', tgt:25,    stat:'maxLv' },
+  { id:'l50', name:'Grandmaster',    desc:'Reach level 50',         icon:'👑', tgt:50,    stat:'maxLv' },
+  { id:'co5', name:'Coin Collector', desc:'Earn 500 coins total',   icon:'🪙', tgt:500,   stat:'totCoin' },
+  { id:'co2k',name:'Coin Hoarder',  desc:'Earn 2000 coins total',  icon:'💰', tgt:2000,  stat:'totCoin' },
+  { id:'g10', name:'Dedicated',      desc:'Play 10 games',          icon:'🎮', tgt:10,    stat:'games' },
+  { id:'g50', name:'Addicted',       desc:'Play 50 games',          icon:'🕹', tgt:50,    stat:'games' },
+  { id:'p5',  name:'Power Player',   desc:'Use 5 power-ups',        icon:'🚀', tgt:5,     stat:'puUsed' },
+  { id:'p25', name:'Power Master',   desc:'Use 25 power-ups',       icon:'⚡', tgt:25,    stat:'puUsed' },
+];
+
+// Weekly challenges
+const WCHAL = [
+  { id:'wm50',  name:'Match 50 gems',     icon:'💎', tgt:50,   stat:'wMatch',  rw:100 },
+  { id:'ws5k',  name:'Score 5,000 pts',   icon:'🎯', tgt:5000, stat:'wScore',  rw:150 },
+  { id:'wc3',   name:'Get 3 combos',      icon:'💥', tgt:3,    stat:'wCombo',  rw:80  },
+  { id:'wl3',   name:'Complete 3 levels',  icon:'📋', tgt:3,    stat:'wLevels', rw:200 },
+  { id:'wp2',   name:'Use 2 power-ups',   icon:'🚀', tgt:2,    stat:'wPU',     rw:60  },
+];
+
+// ============================= GAME STATE ================================
+const DEF = {
+  curLv:1, maxLv:1, bestScore:0, coins:100, totCoin:100,
+  pu:{ bomb:3, shuffle:2, hint:5, lightning:1, color:1 },
+  lvStars:{},
+  cfg:{ sfx:true, music:true, vibrate:true, particles:true, darkBoard:false },
+  achs:[], dailyStreak:0, lastDaily:null,
+  wp:{ wMatch:0, wScore:0, wCombo:0, wLevels:0, wPU:0 },
+  wStart:null, totMatch:0, totMoves:0, games:0, maxCombo:0, puUsed:0,
+  tutDone:false,
+};
+let S = {};
+
+// Save / Load
+const save = () => { try { localStorage.setItem('jb2', JSON.stringify(S)); } catch(e){} };
+const load = () => {
+  try {
+    const d = localStorage.getItem('jb2');
+    if (d) {
+      const p = JSON.parse(d);
+      S = { ...DEF, ...p, cfg:{ ...DEF.cfg, ...(p.cfg||{}) }, pu:{ ...DEF.pu, ...(p.pu||{}) }, wp:{ ...DEF.wp, ...(p.wp||{}) } };
+    } else S = JSON.parse(JSON.stringify(DEF));
+  } catch(e) { S = JSON.parse(JSON.stringify(DEF)); }
+};
+const resetAll = () => {
+  if (!confirm('Reset ALL progress? This cannot be undone!')) return;
+  localStorage.removeItem('jb2');
+  S = JSON.parse(JSON.stringify(DEF));
+  save(); menuStats(); nav('menu');
+  toast('Progress reset!','warn');
+};
+
+// =========================== AUDIO ENGINE =================================
+const Sfx = (() => {
+  let ac = null;
+  const init = () => { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); };
+  const tone = (f, t, d, v=.12) => {
+    if (!S.cfg.sfx) return; init();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type=t; o.frequency.value=f;
+    g.gain.setValueAtTime(v, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+d);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+d);
+  };
+  const chord = (freqs, t, d, v) => freqs.forEach((f,i) => setTimeout(() => tone(f,t,d,v), i*90));
+  return {
+    swap:  () => tone(600,'sine',.1),
+    match: () => tone(800,'sine',.12,.15),
+    combo: n  => tone(400+n*150,'triangle',.18,.18),
+    pu:    () => tone(1200,'square',.12,.1),
+    win:   () => chord([523,659,784],'sine',.18,.15),
+    lose:  () => { tone(400,'sawtooth',.2,.1); setTimeout(()=>tone(300,'sawtooth',.3,.1),150); },
+    click: () => tone(500,'sine',.04,.07),
+    bomb:  () => tone(150,'sawtooth',.3,.18),
+    coin:  () => tone(1000,'sine',.08,.1),
+    star:  () => chord([784,988,1175],'sine',.15,.12),
+  };
+})();
+
+// =========================== VIBRATION ====================================
+const vib = (ms=18) => { if (S.cfg.vibrate && navigator.vibrate) navigator.vibrate(ms); };
+
+// =========================== PARTICLES ====================================
+const Ptc = (() => {
+  const make = (x, y, col, n=8) => {
+    if (!S.cfg.particles) return;
+    for (let i=0; i<n; i++) {
+      const e = document.createElement('div'); e.className='ptc';
+      const sz = 3+Math.random()*6;
+      const a = (Math.PI*2/n)*i + Math.random()*.5;
+      const sp = 55+Math.random()*85;
+      const dx = Math.cos(a)*sp, dy = Math.sin(a)*sp;
+      e.style.cssText = `left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;background:${col};opacity:1;`;
+      document.body.appendChild(e);
+      const t0 = performance.now();
+      const run = t => {
+        const el = (t-t0)/1000; if (el>.55) { e.remove(); return; }
+        const p = el/.55;
+        e.style.left = (x+dx*p)+'px'; e.style.top = (y+dy*p+90*p*p)+'px';
+        e.style.opacity = 1-p; e.style.transform = `scale(${1-p*.5})`;
+        requestAnimationFrame(run);
+      };
+      requestAnimationFrame(run);
+    }
+  };
+  const burst = (x, y, n=20) => {
+    const cols = ['#ff1744','#00e5ff','#ffea00','#e040fb','#00e676','#ff9100'];
+    for (let i=0; i<n; i++) make(x, y, cols[i%cols.length], 1);
+  };
+  return { make, burst };
+})();
+
+// ======================== AURORA BACKGROUND ===============================
+(() => {
+  const cv = document.getElementById('aurora'), c = cv.getContext('2d');
+  let w, h; const orbs = [];
+  const resize = () => { w=cv.width=innerWidth; h=cv.height=innerHeight; };
+  const init = () => {
+    orbs.length=0;
+    for (let i=0; i<7; i++) orbs.push({
+      x:Math.random()*w, y:Math.random()*h,
+      r:70+Math.random()*130,
+      dx:(Math.random()-.5)*.35, dy:(Math.random()-.5)*.35,
+      hue:Math.random()*360
+    });
+  };
+  const draw = () => {
+    c.fillStyle='#0a0a1a'; c.fillRect(0,0,w,h);
+    orbs.forEach(o => {
+      o.x+=o.dx; o.y+=o.dy;
+      if(o.x<-o.r)o.x=w+o.r; if(o.x>w+o.r)o.x=-o.r;
+      if(o.y<-o.r)o.y=h+o.r; if(o.y>h+o.r)o.y=-o.r;
+      o.hue=(o.hue+.08)%360;
+      const g=c.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+      g.addColorStop(0,`hsla(${o.hue},80%,55%,.1)`);
+      g.addColorStop(1,'transparent');
+      c.fillStyle=g; c.beginPath(); c.arc(o.x,o.y,o.r,0,Math.PI*2); c.fill();
+    });
+    requestAnimationFrame(draw);
+  };
+  resize(); addEventListener('resize',resize); init(); draw();
+})();
+
+// ============================ TOAST =======================================
+const toast = (msg, type='info') => {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast toast-${type}`;
+  requestAnimationFrame(() => { t.classList.add('on'); });
+  setTimeout(() => t.classList.remove('on'), 2200);
+};
+
+// ======================== LEVEL CONFIG ====================================
+const lvCfg = lv => {
+  const cols = Math.min(8, 6+Math.floor(lv/10));
+  const rows = Math.min(9, 6+Math.floor(lv/7));
+  const gems = Math.min(GEMS, 4+Math.floor(lv/5));
+  const moves = Math.max(10, 26-Math.floor(lv/3));
+  const tgt = 500+lv*350+Math.floor(lv/5)*500;
+  return { cols, rows, gems, moves, tgt, s1:Math.floor(tgt*.33), s2:Math.floor(tgt*.66), s3:tgt };
+};
+
+// ========================= BOARD STATE ====================================
+let B=[], NR=0, NC=0, sel=null, anim=false;
+let score=0, moves=0, combos=0, cfg=null, actPU=null, hints=[];
+
+// ======================== NAVIGATION ======================================
+let curScr = 'splash';
+const nav = id => {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  curScr = id;
+  Sfx.click();
+  if (id==='menu') menuStats();
+  if (id==='levels') renderLevels();
+  if (id==='shop') renderShop();
+  if (id==='stats') renderStats();
+  if (id==='settings') updateSetUI();
+};
+
+// ======================== SPLASH ==========================================
+const splash = () => {
+  const bar = document.getElementById('sp-bar');
+  const tip = document.getElementById('sp-tip');
+  let p=0, ti=0;
+  const iv = setInterval(() => {
+    p += 1.8+Math.random()*2.5;
+    if (p>30 && ti===0) { tip.textContent=TIPS[0]; ti++; }
+    if (p>60 && ti===1) { tip.textContent=TIPS[1]; ti++; }
+    if (p>85 && ti===2) { tip.textContent=TIPS[2]; ti++; }
+    if (p>=100) {
+      p=100; clearInterval(iv);
+      setTimeout(() => {
+        if (!S.tutDone) { showTutorial(); }
+        else { nav('menu'); checkDaily(); }
+      }, 350);
+    }
+    bar.style.width=p+'%';
+  }, 38);
+};
+
+// ========================= TUTORIAL =======================================
+let tuStep = 0;
+const showTutorial = () => {
+  tuStep = 0;
+  const container = document.getElementById('tu-steps');
+  const dots = document.getElementById('tu-dots');
+  container.innerHTML = '';
+  dots.innerHTML = '';
+  TUTORIAL_STEPS.forEach((s, i) => {
+    const step = document.createElement('div');
+    step.className = 'tu-step' + (i===0?' on':'');
+    step.id = 'tu-s'+i;
+    step.innerHTML = `<div class="tu-title">${s.title}</div><div class="tu-text">${s.text}</div>`;
+    container.appendChild(step);
+    const dot = document.createElement('div');
+    dot.className = 'tu-dot' + (i===0?' on':'');
+    dot.id = 'tu-d'+i;
+    dots.appendChild(dot);
+  });
+  document.getElementById('tu-btn').textContent = 'NEXT';
+  nav('tutorial');
+};
+const tutorialNext = () => {
+  document.getElementById('tu-s'+tuStep)?.classList.remove('on');
+  document.getElementById('tu-d'+tuStep)?.classList.remove('on');
+  tuStep++;
+  if (tuStep >= TUTORIAL_STEPS.length) {
+    S.tutDone = true; save();
+    nav('menu'); checkDaily();
+    return;
+  }
+  document.getElementById('tu-s'+tuStep)?.classList.add('on');
+  document.getElementById('tu-d'+tuStep)?.classList.add('on');
+  if (tuStep === TUTORIAL_STEPS.length-1) {
+    document.getElementById('tu-btn').textContent = "LET'S GO!";
+  }
+  Sfx.click();
+};
+
+// ========================== MENU ==========================================
+const fmt = n => { if(n>=1e6)return(n/1e6).toFixed(1)+'M'; if(n>=1e3)return(n/1e3).toFixed(1)+'K'; return ''+n; };
+const menuStats = () => {
+  document.getElementById('ms-lv').textContent = S.maxLv;
+  document.getElementById('ms-sc').textContent = fmt(S.bestScore);
+  document.getElementById('ms-co').textContent = fmt(S.coins);
+};
+
+// ======================== DAILY REWARD ====================================
+const checkDaily = () => { const d=new Date().toDateString(); if(S.lastDaily!==d) openDaily(); };
+const isYesterday = ds => { if(!ds) return false; const y=new Date(); y.setDate(y.getDate()-1); return new Date(ds).toDateString()===y.toDateString(); };
+const openDaily = () => {
+  const ctn = document.getElementById('d-days'); ctn.innerHTML='';
+  const rws = [20,30,40,50,75,100,200];
+  const today = new Date().toDateString();
+  const streak = S.lastDaily===today ? S.dailyStreak : (isYesterday(S.lastDaily)?S.dailyStreak:0);
+  for (let i=0;i<7;i++){
+    const d=document.createElement('div');
+    d.className='d-day'+(i<streak?' claimed':'')+(i===streak&&S.lastDaily!==today?' today':'');
+    d.innerHTML=`<div class="d-num">Day ${i+1}</div><div class="d-rw">🪙${rws[i]}</div>`;
+    ctn.appendChild(d);
+  }
+  const btn=document.getElementById('d-claim');
+  if(S.lastDaily===today){
+    btn.textContent='ALREADY CLAIMED'; btn.style.opacity='.5';
+    btn.onclick=()=>nav('menu');
+  } else {
+    btn.textContent='CLAIM REWARD'; btn.style.opacity='1';
+    btn.onclick=()=>{
+      const s=isYesterday(S.lastDaily)?S.dailyStreak:0;
+      const rw=rws[Math.min(s,6)];
+      S.coins+=rw; S.totCoin+=rw; S.dailyStreak=s+1; S.lastDaily=today;
+      save(); Sfx.coin(); vib(30);
+      toast(`+${rw} coins claimed!`,'success');
+      nav('menu');
+    };
+  }
+  nav('daily');
+};
+
+// ====================== WEEKLY CHALLENGES =================================
+const openChallenge = () => {
+  const now=Date.now();
+  if(!S.wStart||now-S.wStart>7*864e5){
+    S.wStart=now; S.wp={wMatch:0,wScore:0,wCombo:0,wLevels:0,wPU:0}; save();
+  }
+  const list=document.getElementById('ch-list'); list.innerHTML='';
+  WCHAL.forEach(ch=>{
+    const prog=Math.min(S.wp[ch.stat]||0,ch.tgt);
+    const pct=(prog/ch.tgt*100).toFixed(0);
+    const done=prog>=ch.tgt;
+    const el=document.createElement('div');
+    el.className='ch-item gl';
+    el.innerHTML=`<div class="ch-ico">${ch.icon}</div>
+      <div class="ch-info"><div class="ch-name">${ch.name} ${done?'✅':''}</div>
+      <div class="ch-bar"><div class="ch-fill" style="width:${pct}%"></div></div></div>
+      <div class="ch-rw">🪙${ch.rw}</div>`;
+    list.appendChild(el);
+  });
+  nav('challenge');
+};
+
+// ======================= LEVEL SELECT =====================================
+const renderLevels = () => {
+  const grid=document.getElementById('lv-grid'); grid.innerHTML='';
+  const tot=Math.max(40,S.maxLv+10);
+  for(let i=1;i<=tot;i++){
+    const el=document.createElement('div');
+    const ok=i<=S.maxLv, cur=i===S.curLv;
+    el.className='lv-btn '+(cur?'cur':ok?'unlocked':'locked');
+    const st=S.lvStars[i]||0;
+    let sh='';
+    if(ok) for(let s=0;s<3;s++) sh+=s<st?'⭐':'☆';
+    el.innerHTML=`<div>${ok?i:'🔒'}</div><div class="lv-stars">${sh}</div>`;
+    if(ok) el.onclick=()=>{ S.curLv=i; play(); };
+    grid.appendChild(el);
+  }
+};
+
+// ============================ SHOP ========================================
+const renderShop = () => {
+  document.getElementById('sh-co').textContent=S.coins;
+  const list=document.getElementById('sh-list'); list.innerHTML='';
+  SHOP.forEach(it=>{
+    const ok=it.special==='ad'?true:S.coins>=it.price;
+    const el=document.createElement('div');
+    el.className='sh-item gl';
+    el.innerHTML=`<div class="sh-ico">${it.emoji}</div>
+      <div class="sh-info"><div class="sh-name">${it.name}</div><div class="sh-desc">${it.desc}</div></div>
+      <button class="btn bsm ${ok?'bg':'bo'}" ${!ok?'disabled style="opacity:.35"':''}>${it.special==='ad'?'🎬 Watch':'🪙 '+it.price}</button>`;
+    if(ok) el.querySelector('button').onclick=()=>buyItem(it);
+    list.appendChild(el);
+  });
+};
+const buyItem = it => {
+  if(it.special==='ad'){
+    S.coins+=it.qty; S.totCoin+=it.qty; save(); Sfx.coin(); vib(20);
+    toast(`+${it.qty} coins!`,'success'); renderShop(); return;
+  }
+  if(S.coins<it.price) return;
+  S.coins-=it.price;
+  if(it.pu==='_moves' && curScr==='game'){ moves+=it.qty; updateHUD(); }
+  else if(it.pu in S.pu) S.pu[it.pu]+=it.qty;
+  Sfx.coin(); vib(20); save();
+  toast(`Bought ${it.name}!`,'success');
+  renderShop();
+};
+
+// ======================== STATS & ACHS ====================================
+const renderStats = () => {
+  const b=document.getElementById('st-body');
+  b.innerHTML=`
+    <div class="st-row gl"><span class="st-l">Games Played</span><span class="st-v">${S.games}</span></div>
+    <div class="st-row gl"><span class="st-l">Best Score</span><span class="st-v">${fmt(S.bestScore)}</span></div>
+    <div class="st-row gl"><span class="st-l">Highest Level</span><span class="st-v">${S.maxLv}</span></div>
+    <div class="st-row gl"><span class="st-l">Total Matches</span><span class="st-v">${fmt(S.totMatch)}</span></div>
+    <div class="st-row gl"><span class="st-l">Total Moves</span><span class="st-v">${fmt(S.totMoves)}</span></div>
+    <div class="st-row gl"><span class="st-l">Max Combo</span><span class="st-v">${S.maxCombo}×</span></div>
+    <div class="st-row gl"><span class="st-l">Coins Earned</span><span class="st-v">${fmt(S.totCoin)}</span></div>
+    <div class="st-row gl"><span class="st-l">Power-Ups Used</span><span class="st-v">${S.puUsed}</span></div>
+    <div class="st-row gl"><span class="st-l">Daily Streak</span><span class="st-v">${S.dailyStreak} days</span></div>
+    <div class="ach-t">🏆 Achievements (${S.achs.length}/${ACHS.length})</div>
+  `;
+  ACHS.forEach(a=>{
+    const v=S[a.stat]||0, done=v>=a.tgt, pct=Math.min(100,v/a.tgt*100);
+    const el=document.createElement('div');
+    el.className='ach gl'+(done?' got':'');
+    el.innerHTML=`<div class="ach-ico">${done?a.icon:'🔒'}</div>
+      <div class="ach-info"><div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc} (${Math.min(v,a.tgt)}/${a.tgt})</div>
+      <div class="ach-bar"><div class="ach-fill" style="width:${pct}%"></div></div></div>`;
+    b.appendChild(el);
+  });
+};
+const checkAchs = () => {
+  let fresh=false;
+  ACHS.forEach(a=>{
+    if(!S.achs.includes(a.id)){
+      if((S[a.stat]||0)>=a.tgt){
+        S.achs.push(a.id); S.coins+=50; S.totCoin+=50; fresh=true;
+        toast(`Achievement: ${a.name}!`,'success');
+      }
+    }
+  });
+  if(fresh) save();
+};
+const checkWeekly = () => {
+  WCHAL.forEach(ch=>{
+    if((S.wp[ch.stat]||0)>=ch.tgt){
+      // auto-claim once
+      const key='_wc_'+ch.id;
+      if(!S[key]){ S[key]=true; S.coins+=ch.rw; S.totCoin+=ch.rw; save(); toast(`Challenge done: +${ch.rw}🪙`,'success'); }
+    }
+  });
+};
+
+// ========================== SETTINGS ======================================
+const togSet = k => { S.cfg[k]=!S.cfg[k]; save(); updateSetUI(); Sfx.click(); };
+const updateSetUI = () => {
+  ['sfx','music','vibrate','particles','darkBoard'].forEach(k=>{
+    const el=document.getElementById('t-'+{sfx:'sfx',music:'mus',vibrate:'vib',particles:'ptc',darkBoard:'dboard'}[k]);
+    if(el) el.className='tog'+(S.cfg[k]?' on':'');
+  });
+};
+
+// ========================= GAME CORE ======================================
+const play = lv => {
+  if(lv!==undefined) S.curLv=lv;
+  cfg=lvCfg(S.curLv); NR=cfg.rows; NC=cfg.cols;
+  score=0; moves=cfg.moves; combos=0; sel=null; anim=false; actPU=null; hints=[];
+  S.games++; save();
+  genBoard(); renderBoard(); updateHUD(); updatePU();
+  nav('game'); Sfx.click();
+};
+
+// Generate board (no initial matches)
+const genBoard = () => {
+  B=[];
+  for(let r=0;r<NR;r++){
+    B[r]=[];
+    for(let c=0;c<NC;c++){
+      let t;
+      do { t=Math.floor(Math.random()*cfg.gems); } while(wouldMatch(r,c,t));
+      B[r][c]={t,sp:null};
+    }
+  }
+  if(!findMatches().length && !findMove()) genBoard();
+};
+const wouldMatch = (r,c,t) => {
+  if(c>=2 && B[r][c-1]?.t===t && B[r][c-2]?.t===t) return true;
+  if(r>=2 && B[r-1]?.[c]?.t===t && B[r-2]?.[c]?.t===t) return true;
+  return false;
+};
+
+// Render board
+const renderBoard = () => {
+  const be=document.getElementById('board');
+  const mw=Math.min(innerWidth-14,400);
+  const mh=innerHeight-140;
+  const cs=Math.min(Math.floor(mw/NC),Math.floor(mh/NR),50);
+  be.style.gridTemplateColumns=`repeat(${NC},${cs}px)`;
+  be.style.gridTemplateRows=`repeat(${NR},${cs}px)`;
+  if(S.cfg.darkBoard) be.style.background='rgba(0,0,0,.5)';
+  else be.style.background='rgba(0,0,0,.35)';
+  be.innerHTML='';
+  for(let r=0;r<NR;r++){
+    for(let c=0;c<NC;c++){
+      const el=document.createElement('div');
+      const g=B[r][c];
+      if(g){
+        el.className=`c g${g.t}`;
+        if(g.sp) el.dataset.sp=g.sp;
+        el.textContent=EMOJI[g.t];
+        el.style.fontSize=(cs*.45)+'px';
+      } else {
+        el.className='c empty';
+      }
+      el.dataset.r=r; el.dataset.c=c;
+      el.addEventListener('pointerdown',onDown);
+      el.addEventListener('pointerup',onUp);
+      el.addEventListener('pointermove',onMove);
+      be.appendChild(el);
+    }
+  }
+};
+
+const updateCell = (r,c) => {
+  const i=r*NC+c, be=document.getElementById('board'), el=be.children[i];
+  if(!el||!B[r][c]) return;
+  const g=B[r][c];
+  el.className=`c g${g.t}`;
+  if(g.sp) el.dataset.sp=g.sp; else delete el.dataset.sp;
+  el.textContent=EMOJI[g.t];
+  if(sel&&sel.r===r&&sel.c===c) el.classList.add('sel');
+  if(hints.some(h=>h.r===r&&h.c===c)) el.classList.add('hint');
+};
+
+const updateHUD = () => {
+  document.getElementById('g-sc').textContent=fmt(score);
+  document.getElementById('g-lv').textContent=`Level ${S.curLv}`;
+  document.getElementById('g-mv').textContent=moves;
+  document.getElementById('g-tg').textContent=fmt(cfg.tgt);
+  const pct=Math.min(100,score/cfg.tgt*100);
+  document.getElementById('pfill').style.width=pct+'%';
+  [['s1',cfg.s1],['s2',cfg.s2],['s3',cfg.s3]].forEach(([id,th])=>{
+    const el=document.getElementById(id);
+    if(score>=th) el.classList.add('got'); else el.classList.remove('got');
+  });
+};
+
+const updatePU = () => {
+  const map={bomb:'pb',shuffle:'ps',hint:'ph',lightning:'pl',color:'pc'};
+  Object.entries(map).forEach(([k,id])=>{
+    const el=document.getElementById(id), cn=document.getElementById(id+'-n');
+    cn.textContent=S.pu[k];
+    if(S.pu[k]<=0) el.classList.add('off'); else el.classList.remove('off');
+  });
+};
+
+// ======================== INPUT HANDLING ===================================
+let pStart=null, pPos={x:0,y:0}, dragging=false, swiped=false;
+
+const onDown = e => {
+  if(anim) return; e.preventDefault();
+  const r=+e.target.dataset.r, c=+e.target.dataset.c;
+  pStart={r,c}; pPos={x:e.clientX,y:e.clientY}; dragging=true; swiped=false;
+  if(actPU){ applyPU(r,c); return; }
+};
+const onMove = e => {
+  if(!dragging||anim||swiped||!pStart) return; e.preventDefault();
+  const dx=e.clientX-pPos.x, dy=e.clientY-pPos.y;
+  if(Math.abs(dx)>18||Math.abs(dy)>18){
+    swiped=true;
+    let dr=0,dc=0;
+    if(Math.abs(dx)>Math.abs(dy)) dc=dx>0?1:-1; else dr=dy>0?1:-1;
+    const tr=pStart.r+dr, tc=pStart.c+dc;
+    if(tr>=0&&tr<NR&&tc>=0&&tc<NC) trySwap(pStart.r,pStart.c,tr,tc);
+    dragging=false;
+  }
+};
+const onUp = e => {
+  if(anim) return;
+  if(!swiped&&pStart){
+    const r=+e.target.dataset.r, c=+e.target.dataset.c;
+    handleTap(r,c);
+  }
+  dragging=false; pStart=null;
+};
+
+const handleTap = (r,c) => {
+  clearHints();
+  if(sel){
+    if(Math.abs(sel.r-r)+Math.abs(sel.c-c)===1){ trySwap(sel.r,sel.c,r,c); }
+    else { desel(); selCell(r,c); }
+  } else selCell(r,c);
+};
+const selCell = (r,c) => {
+  sel={r,c};
+  const i=r*NC+c, be=document.getElementById('board');
+  be.children[i]?.classList.add('sel');
+  Sfx.click(); vib(8);
+};
+const desel = () => {
+  if(sel){ const i=sel.r*NC+sel.c; document.getElementById('board').children[i]?.classList.remove('sel'); }
+  sel=null;
+};
+
+// ====================== SWAP & MATCH ======================================
+const trySwap = async (r1,c1,r2,c2) => {
+  if(anim) return; anim=true; desel(); clearHints();
+  [B[r1][c1],B[r2][c2]]=[B[r2][c2],B[r1][c1]];
+  Sfx.swap(); vib(12);
+  updateCell(r1,c1); updateCell(r2,c2);
+  await slp(140);
+  if(findMatches().length){
+    moves--; S.totMoves++; combos=0;
+    await processMatches();
+  } else {
+    [B[r1][c1],B[r2][c2]]=[B[r2][c2],B[r1][c1]];
+    updateCell(r1,c1); updateCell(r2,c2); vib(25);
+    await slp(140);
+  }
+  updateHUD(); anim=false; checkEnd(); resetHintTimer();
+};
+
+const processMatches = async () => {
+  let ms=findMatches();
+  while(ms.length){
+    combos++;
+    const pts=calcPts(ms,combos);
+    score+=pts;
+    S.totMatch+=ms.length; S.wp.wMatch+=ms.length;
+    if(combos>S.maxCombo) S.maxCombo=combos;
+    if(combos>=2){ showCombo(combos); S.wp.wCombo++; Sfx.combo(combos); }
+    else Sfx.match();
+    vib(15+combos*8);
+
+    await animMatch(ms);
+    createSpecials(ms);
+    removeMs(ms);
+    await slp(80);
+    await drop();
+    await slp(80);
+    await fill();
+    await slp(120);
+    updateHUD();
+    ms=findMatches();
+  }
+  if(!findMove()) await shuffle();
+  checkAchs(); checkWeekly(); save();
+};
+
+// Find all matches
+const findMatches = () => {
+  const set=new Set();
+  for(let r=0;r<NR;r++){
+    for(let c=0;c<NC-2;c++){
+      if(B[r][c]&&B[r][c+1]&&B[r][c+2]&&B[r][c].t===B[r][c+1].t&&B[r][c].t===B[r][c+2].t){
+        let l=3; while(c+l<NC&&B[r][c+l]?.t===B[r][c].t) l++;
+        for(let i=0;i<l;i++) set.add(`${r},${c+i}`);
+      }
+    }
+  }
+  for(let c=0;c<NC;c++){
+    for(let r=0;r<NR-2;r++){
+      if(B[r][c]&&B[r+1][c]&&B[r+2][c]&&B[r][c].t===B[r+1][c].t&&B[r][c].t===B[r+2][c].t){
+        let l=3; while(r+l<NR&&B[r+l]?.[c]?.t===B[r][c].t) l++;
+        for(let i=0;i<l;i++) set.add(`${r+i},${c}`);
+      }
+    }
+  }
+  return [...set].map(s=>{ const[r,c]=s.split(',').map(Number); return{r,c}; });
+};
+
+const calcPts = (ms, combo) => {
+  let base=ms.length*10;
+  if(ms.length>=5) base*=3;
+  else if(ms.length>=4) base*=2;
+  base*=(1+(combo-1)*.5);
+  const coins=Math.floor(base/20);
+  S.coins+=coins; S.totCoin+=coins; S.wp.wScore+=base;
+  return Math.floor(base);
+};
+
+const animMatch = async ms => {
+  const be=document.getElementById('board');
+  ms.forEach(m=>{
+    const i=m.r*NC+m.c, el=be.children[i];
+    if(el){
+      el.classList.add('pop');
+      const rc=el.getBoundingClientRect();
+      Ptc.make(rc.left+rc.width/2,rc.top+rc.height/2,GCOL[B[m.r][m.c]?.t||0],5);
+      // score float
+      const sf=document.createElement('div');
+      sf.className='sfloat on';
+      sf.textContent='+'+Math.floor(10*(1+(combos-1)*.5));
+      sf.style.left=rc.left+'px'; sf.style.top=rc.top+'px';
+      document.body.appendChild(sf);
+      setTimeout(()=>sf.remove(),750);
+    }
+  });
+  await slp(280);
+};
+
+// Create special gems (4-match, 5-match, L/T shapes)
+const createSpecials = ms => {
+  const rMap={}, cMap={};
+  ms.forEach(m=>{ (rMap[m.r]=rMap[m.r]||[]).push(m.c); (cMap[m.c]=cMap[m.c]||[]).push(m.r); });
+
+  // Check L/T shapes (intersection of row and col matches)
+  ms.forEach(m => {
+    const inRow = rMap[m.r]?.length >= 3;
+    const inCol = cMap[m.c]?.length >= 3;
+    if (inRow && inCol && B[m.r][m.c]) {
+      B[m.r][m.c] = { t: B[m.r][m.c].t, sp: 'bomb' };
+    }
+  });
+
+  // 5+ in a row → star
+  Object.entries(rMap).forEach(([r,cs])=>{
+    cs.sort((a,b)=>a-b);
+    let cnt=1;
+    for(let i=1;i<cs.length;i++){
+      if(cs[i]===cs[i-1]+1){ cnt++; if(cnt>=5){ const mc=cs[i-2]; if(B[+r][mc]&&!B[+r][mc].sp) B[+r][mc]={t:B[+r][mc].t,sp:'star'}; } }
+      else cnt=1;
+    }
+  });
+  Object.entries(cMap).forEach(([c,rs])=>{
+    rs.sort((a,b)=>a-b);
+    let cnt=1;
+    for(let i=1;i<rs.length;i++){
+      if(rs[i]===rs[i-1]+1){ cnt++; if(cnt>=5){ const mr=rs[i-2]; if(B[mr]?.[+c]&&!B[mr][+c].sp) B[mr][+c]={t:B[mr][+c].t,sp:'star'}; } }
+      else cnt=1;
+    }
+  });
+
+  // 4 in a row → lightning
+  Object.entries(rMap).forEach(([r,cs])=>{
+    cs.sort((a,b)=>a-b);
+    let cnt=1;
+    for(let i=1;i<cs.length;i++){
+      if(cs[i]===cs[i-1]+1){ cnt++; if(cnt===4){ const mc=cs[i-1]; if(B[+r][mc]&&!B[+r][mc].sp) B[+r][mc]={t:B[+r][mc].t,sp:'lightning'}; } }
+      else cnt=1;
+    }
+  });
+  Object.entries(cMap).forEach(([c,rs])=>{
+    rs.sort((a,b)=>a-b);
+    let cnt=1;
+    for(let i=1;i<rs.length;i++){
+      if(rs[i]===rs[i-1]+1){ cnt++; if(cnt===4){ const mr=rs[i-1]; if(B[mr]?.[+c]&&!B[mr][+c].sp) B[mr][+c]={t:B[mr][+c].t,sp:'bomb'}; } }
+      else cnt=1;
+    }
+  });
+};
+
+const removeMs = ms => {
+  ms.forEach(m=>{
+    const g=B[m.r][m.c];
+    if(g?.sp==='bomb') trigBomb(m.r,m.c);
+    else if(g?.sp==='lightning') trigLight(m.r,m.c);
+    else if(g?.sp==='star') trigStar(m.r,m.c,g.t);
+    B[m.r][m.c]=null;
+  });
+};
+
+const trigBomb = (r,c) => {
+  Sfx.bomb(); vib(45);
+  for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+    const nr=r+dr,nc=c+dc;
+    if(nr>=0&&nr<NR&&nc>=0&&nc<NC&&B[nr][nc]){
+      score+=15; B[nr][nc]=null;
+      const be=document.getElementById('board'), el=be.children[nr*NC+nc];
+      if(el){ const rc=el.getBoundingClientRect(); Ptc.make(rc.left+rc.width/2,rc.top+rc.height/2,'#ff9100',8); }
+    }
+  }
+};
+
+const trigLight = (r,c) => {
+  Sfx.pu(); vib(35);
+  for(let cc=0;cc<NC;cc++) if(B[r][cc]){
+    score+=10; B[r][cc]=null;
+    const be=document.getElementById('board'), el=be.children[r*NC+cc];
+    if(el){ const rc=el.getBoundingClientRect(); Ptc.make(rc.left+rc.width/2,rc.top+rc.height/2,'#ffea00',4); }
+  }
+};
+
+const trigStar = (r,c,type) => {
+  Sfx.star(); vib(55);
+  for(let rr=0;rr<NR;rr++) for(let cc=0;cc<NC;cc++) if(B[rr][cc]?.t===type){
+    score+=10; B[rr][cc]=null;
+    const be=document.getElementById('board'), el=be.children[rr*NC+cc];
+    if(el){ const rc=el.getBoundingClientRect(); Ptc.make(rc.left+rc.width/2,rc.top+rc.height/2,GCOL[type],4); }
+  }
+};
+
+// Gravity
+const drop = async () => {
+  let moved=false;
+  for(let c=0;c<NC;c++){
+    let wp=NR-1;
+    for(let r=NR-1;r>=0;r--){ if(B[r][c]){ if(r!==wp){ B[wp][c]=B[r][c]; B[r][c]=null; moved=true; } wp--; } }
+  }
+  if(moved) renderBoard();
+};
+
+// Fill empty with new gems
+const fill = async () => {
+  let filled=false;
+  for(let r=0;r<NR;r++) for(let c=0;c<NC;c++){
+    if(!B[r][c]){ B[r][c]={t:Math.floor(Math.random()*cfg.gems),sp:null}; filled=true; }
+  }
+  if(filled){
+    renderBoard();
+    const be=document.getElementById('board');
+    for(let i=0;i<be.children.length;i++) be.children[i].classList.add('spawn');
+  }
+};
+
+// Find a valid swap
+const findMove = () => {
+  for(let r=0;r<NR;r++) for(let c=0;c<NC;c++){
+    if(c+1<NC){
+      [B[r][c],B[r][c+1]]=[B[r][c+1],B[r][c]];
+      if(findMatches().length){ [B[r][c],B[r][c+1]]=[B[r][c+1],B[r][c]]; return{r1:r,c1:c,r2:r,c2:c+1}; }
+      [B[r][c],B[r][c+1]]=[B[r][c+1],B[r][c]];
+    }
+    if(r+1<NR){
+      [B[r][c],B[r+1][c]]=[B[r+1][c],B[r][c]];
+      if(findMatches().length){ [B[r][c],B[r+1][c]]=[B[r+1][c],B[r][c]]; return{r1:r,c1:c,r2:r+1,c2:c}; }
+      [B[r][c],B[r+1][c]]=[B[r+1][c],B[r][c]];
+    }
+  }
+  return null;
+};
+
+// Shuffle entire board
+const shuffle = async () => {
+  const gems=[];
+  for(let r=0;r<NR;r++) for(let c=0;c<NC;c++) if(B[r][c]) gems.push(B[r][c]);
+  for(let i=gems.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [gems[i],gems[j]]=[gems[j],gems[i]]; }
+  let idx=0;
+  for(let r=0;r<NR;r++) for(let c=0;c<NC;c++) B[r][c]=gems[idx++]||{t:Math.floor(Math.random()*cfg.gems),sp:null};
+  renderBoard(); showCombo(0,'🔀 SHUFFLE!'); await slp(400);
+  let ms=findMatches();
+  while(ms.length){ removeMs(ms); await drop(); await fill(); await slp(80); ms=findMatches(); }
+  if(!findMove()) await shuffle();
+};
+
+// Combo text
+const showCombo = (n,txt) => {
+  const el=document.getElementById('combo');
+  const cls=['#00e5ff','#00e676','#ffea00','#ff9100','#ff1744','#e040fb'];
+  el.textContent=txt||`${n}× COMBO!`;
+  el.style.color=cls[Math.min(n-2,cls.length-1)]||cls[0];
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+};
+
+// ======================== GAME END ========================================
+const checkEnd = () => {
+  if(score>=cfg.tgt) setTimeout(win,350);
+  else if(moves<=0) setTimeout(lose,350);
+};
+
+const win = () => {
+  anim=true; Sfx.win(); vib(80);
+  let stars=0;
+  if(score>=cfg.s1) stars=1; if(score>=cfg.s2) stars=2; if(score>=cfg.s3) stars=3;
+  if(!S.lvStars[S.curLv]||S.lvStars[S.curLv]<stars) S.lvStars[S.curLv]=stars;
+  if(score>S.bestScore) S.bestScore=score;
+  if(S.curLv>=S.maxLv) S.maxLv=S.curLv+1;
+  const rw=20+stars*15+S.curLv*5;
+  S.coins+=rw; S.totCoin+=rw; S.wp.wLevels++;
+  checkAchs(); save();
+
+  // Burst particles
+  Ptc.burst(innerWidth/2,innerHeight/2,30);
+
+  const sd='⭐'.repeat(stars)+'☆'.repeat(3-stars);
+  document.getElementById('ov-body').innerHTML=`
+    <div class="ov-title win">LEVEL COMPLETE!</div>
+    <div class="ov-stars">${sd}</div>
+    <div class="ov-score">Score: ${fmt(score)}</div>
+    <div class="ov-det">+${rw} coins earned</div>
+    <div class="ov-btns">
+      <button class="btn bp bbl" onclick="nextLv()">NEXT LEVEL ▶</button>
+      <button class="btn bo bbl" onclick="replay()">REPLAY</button>
+      <button class="btn bo bbl" onclick="toMenu()">MENU</button>
+    </div>`;
+  nav('overlay');
+};
+
+const lose = () => {
+  anim=true; Sfx.lose(); vib(60);
+  if(score>S.bestScore) S.bestScore=score;
+  checkAchs(); save();
+  document.getElementById('ov-body').innerHTML=`
+    <div class="ov-title lose">GAME OVER</div>
+    <div class="ov-score">Score: ${fmt(score)}</div>
+    <div class="ov-det">Target: ${fmt(cfg.tgt)}</div>
+    <div class="ov-btns">
+      <button class="btn ba bbl" onclick="replay()">🔄 TRY AGAIN</button>
+      ${S.coins>=100?'<button class="btn bg bbl" onclick="buyMoves()">+5 MOVES (🪙100)</button>':''}
+      <button class="btn bo bbl" onclick="toMenu()">MENU</button>
+    </div>`;
+  nav('overlay');
+};
+
+const nextLv = () => { S.curLv++; if(S.curLv>S.maxLv) S.maxLv=S.curLv; save(); play(); };
+const replay = () => play();
+const toMenu = () => { anim=false; nav('menu'); };
+const buyMoves = () => {
+  if(S.coins>=100){ S.coins-=100; moves+=5; save(); updateHUD(); updatePU(); nav('game'); anim=false; }
+};
+
+const pause = () => {
+  document.getElementById('ov-body').innerHTML=`
+    <div class="ov-title" style="color:#fff">PAUSED</div>
+    <div class="ov-score">Level ${S.curLv}</div>
+    <div class="ov-det">Score: ${fmt(score)}</div>
+    <div class="ov-btns">
+      <button class="btn bp bbl" onclick="resume()">▶ RESUME</button>
+      <button class="btn bo bbl" onclick="toMenu()">EXIT TO MENU</button>
+    </div>`;
+  nav('overlay');
+};
+const resume = () => nav('game');
+
+// ======================== POWER-UPS =======================================
+const usePU = type => {
+  if(anim||S.pu[type]<=0) return;
+  S.puUsed++; S.wp.wPU++;
+  if(type==='shuffle'){
+    S.pu.shuffle--; save(); updatePU(); Sfx.pu(); shuffle();
+  } else if(type==='hint'){
+    S.pu.hint--; save(); updatePU(); showHint();
+  } else if(type==='color'){
+    // Color bomb: pick a random type and remove all
+    S.pu.color--; save(); updatePU();
+    actPU='color';
+    showCombo(0,'🌈 Tap a gem color!');
+  } else {
+    actPU=type;
+    showCombo(0,`Tap to use ${PU_DEF[type].emoji}`);
+  }
+};
+
+const applyPU = async (r,c) => {
+  if(!actPU) return;
+  const type=actPU; actPU=null;
+  S.pu[type]--; save(); updatePU(); anim=true;
+
+  if(type==='bomb'){
+    Sfx.bomb(); vib(45);
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      const nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<NR&&nc>=0&&nc<NC&&B[nr][nc]){
+        score+=15;
+        const be=document.getElementById('board'), el=be.children[nr*NC+nc];
+        if(el){ const rc=el.getBoundingClientRect(); Ptc.make(rc.left+rc.width/2,rc.top+rc.height/2,'#ff9100',8); }
+        B[nr][nc]=null;
+      }
+    }
+  } else if(type==='lightning'){
+    Sfx.pu(); vib(35);
+    for(let cc=0;cc<NC;cc++) if(B[r][cc]){
+      score+=10;
+      const be=document.getElementById('board'), el=be.children[r*NC+cc];
+      if(el){ const rc=el.getBoundingClientRect(); Ptc.make(rc.left+rc.width/2,rc.top+rc.height/2,'#ffea00',5); }
+      B[r][cc]=null;
+    }
+  } else if(type==='color'){
+    const target=B[r][c]?.t;
+    if(target===undefined||target===null){ anim=false; return; }
+    Sfx.star(); vib(50);
+    for(let rr=0;rr<NR;rr++) for(let cc=0;cc<NC;cc++) if(B[rr][cc]?.t===target){
+      score+=10;
+      const be=document.getElementById('board'), el=be.children[rr*NC+cc];
+      if(el){ const rc=el.getBoundingClientRect(); Ptc.make(rc.left+rc.width/2,rc.top+rc.height/2,GCOL[target],5); }
+      B[rr][cc]=null;
+    }
+  }
+
+  await drop(); await fill(); await slp(150);
+  combos=0; await processMatches();
+  updateHUD(); anim=false; checkEnd();
+};
+
+const showHint = () => {
+  clearHints();
+  const mv=findMove();
+  if(mv){
+    hints=[{r:mv.r1,c:mv.c1},{r:mv.r2,c:mv.c2}];
+    hints.forEach(h=>updateCell(h.r,h.c));
+    Sfx.click();
+    setTimeout(clearHints,3000);
+  }
+};
+const clearHints = () => { hints.forEach(h=>updateCell(h.r,h.c)); hints=[]; };
+
+// Auto-hint timer
+let htTimer=null;
+const resetHintTimer = () => {
+  if(htTimer) clearTimeout(htTimer);
+  htTimer=setTimeout(()=>{
+    if(curScr==='game'&&!anim){
+      const mv=findMove();
+      if(mv){
+        hints=[{r:mv.r1,c:mv.c1},{r:mv.r2,c:mv.c2}];
+        hints.forEach(h=>updateCell(h.r,h.c));
+        setTimeout(clearHints,2500);
+      }
+    }
+  },7000);
+};
+
+// ========================= UTILITIES ======================================
+const slp = ms => new Promise(r=>setTimeout(r,ms));
+
+// ======================= MUSIC ENGINE =====================================
+// Procedural background music using Web Audio API oscillators
+const Music = (() => {
+  let ac = null;
+  let playing = false;
+  let nodes = [];
+  let interval = null;
+
+  const SCALES = {
+    pentatonic: [261.6, 293.7, 329.6, 392.0, 440.0, 523.3, 587.3, 659.3],
+    minor:      [261.6, 293.7, 311.1, 349.2, 392.0, 415.3, 466.2, 523.3],
+    major:      [261.6, 293.7, 329.6, 349.2, 392.0, 440.0, 493.9, 523.3],
+  };
+
+  const init = () => {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+  };
+
+  const playNote = (freq, duration, delay, vol = 0.04) => {
+    if (!ac || !S.cfg.music) return;
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0, ac.currentTime + delay);
+    g.gain.linearRampToValueAtTime(vol, ac.currentTime + delay + 0.05);
+    g.gain.linearRampToValueAtTime(vol * 0.6, ac.currentTime + delay + duration * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + delay + duration);
+    o.connect(g);
+    g.connect(ac.destination);
+    o.start(ac.currentTime + delay);
+    o.stop(ac.currentTime + delay + duration);
+    nodes.push({ o, g });
+  };
+
+  const playAmbientChord = () => {
+    if (!S.cfg.music || !ac) return;
+    const scale = SCALES.pentatonic;
+    const baseIdx = Math.floor(Math.random() * 4);
+    const chord = [scale[baseIdx], scale[baseIdx + 2], scale[baseIdx + 4]];
+    chord.forEach((f, i) => {
+      playNote(f * 0.5, 3.5, i * 0.15, 0.025);
+      playNote(f, 3.5, i * 0.15 + 0.05, 0.015);
+    });
+  };
+
+  const playMelody = () => {
+    if (!S.cfg.music || !ac) return;
+    const scale = SCALES.pentatonic;
+    const noteCount = 3 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < noteCount; i++) {
+      const note = scale[Math.floor(Math.random() * scale.length)];
+      const octave = Math.random() > 0.5 ? 1 : 2;
+      playNote(note * octave, 0.3 + Math.random() * 0.4, i * 0.25, 0.02);
+    }
+  };
+
+  const start = () => {
+    if (playing || !S.cfg.music) return;
+    init();
+    playing = true;
+    playAmbientChord();
+    interval = setInterval(() => {
+      if (!S.cfg.music) { stop(); return; }
+      if (Math.random() > 0.4) playAmbientChord();
+      if (Math.random() > 0.6) playMelody();
+    }, 4000);
+  };
+
+  const stop = () => {
+    playing = false;
+    if (interval) { clearInterval(interval); interval = null; }
+    nodes = [];
+  };
+
+  const toggle = () => {
+    if (playing) stop(); else start();
+  };
+
+  return { start, stop, toggle };
+})();
+
+// ==================== STREAK BONUS SYSTEM =================================
+const StreakBonus = (() => {
+  let streakCount = 0;
+  let lastMatchTime = 0;
+  const STREAK_WINDOW = 5000; // 5 seconds to maintain streak
+
+  const recordMatch = () => {
+    const now = Date.now();
+    if (now - lastMatchTime < STREAK_WINDOW) {
+      streakCount++;
+    } else {
+      streakCount = 1;
+    }
+    lastMatchTime = now;
+
+    if (streakCount >= 5) {
+      showStreakBonus(streakCount);
+      return Math.floor(streakCount * 1.5);
+    }
+    return 1;
+  };
+
+  const showStreakBonus = (count) => {
+    const bonusPts = count * 25;
+    score += bonusPts;
+    toast(`🔥 ${count}× Streak! +${bonusPts} bonus!`, 'success');
+    Sfx.star();
+    vib(40);
+  };
+
+  const reset = () => { streakCount = 0; lastMatchTime = 0; };
+  const getStreak = () => streakCount;
+
+  return { recordMatch, reset, getStreak };
+})();
+
+// ====================== SCREEN SHAKE EFFECT ===============================
+const screenShake = (intensity = 5, duration = 200) => {
+  if (!S.cfg.particles) return;
+  const board = document.getElementById('board');
+  if (!board) return;
+  const startTime = performance.now();
+  const shake = (t) => {
+    const elapsed = t - startTime;
+    if (elapsed > duration) {
+      board.style.transform = '';
+      return;
+    }
+    const progress = elapsed / duration;
+    const dampening = 1 - progress;
+    const dx = (Math.random() - 0.5) * intensity * dampening * 2;
+    const dy = (Math.random() - 0.5) * intensity * dampening * 2;
+    board.style.transform = `translate(${dx}px, ${dy}px)`;
+    requestAnimationFrame(shake);
+  };
+  requestAnimationFrame(shake);
+};
+
+// ================== CONFETTI CELEBRATION ==================================
+const Confetti = (() => {
+  const colors = ['#ff1744', '#00e5ff', '#ffea00', '#e040fb', '#00e676', '#ff9100', '#7c4dff'];
+
+  const launch = (count = 60) => {
+    if (!S.cfg.particles) return;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.style.cssText = `
+        position:fixed;pointer-events:none;z-index:100;
+        width:${4 + Math.random() * 8}px;
+        height:${4 + Math.random() * 8}px;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+        left:${Math.random() * innerWidth}px;
+        top:-20px;opacity:1;
+      `;
+      document.body.appendChild(el);
+
+      const dx = (Math.random() - 0.5) * 200;
+      const speed = 200 + Math.random() * 400;
+      const rotation = Math.random() * 720;
+      const startTime = performance.now();
+      const duration = 1500 + Math.random() * 1500;
+
+      const animate = (t) => {
+        const elapsed = t - startTime;
+        if (elapsed > duration) { el.remove(); return; }
+        const progress = elapsed / duration;
+        const x = dx * progress;
+        const y = speed * progress;
+        el.style.transform = `translate(${x}px, ${y}px) rotate(${rotation * progress}deg)`;
+        el.style.opacity = 1 - progress * 0.7;
+        requestAnimationFrame(animate);
+      };
+      requestAnimationFrame(animate);
+    }
+  };
+
+  return { launch };
+})();
+
+// =================== FLOATING GEMS ANIMATION (Menu) ======================
+const MenuGems = (() => {
+  let interval = null;
+  const emojis = ['💎', '🟢', '🔵', '🟡', '🟣', '🟠', '🩵', '⭐', '💫'];
+
+  const start = () => {
+    if (interval) return;
+    interval = setInterval(() => {
+      if (curScr !== 'menu') return;
+      const el = document.createElement('div');
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+      const startX = Math.random() * innerWidth;
+      const size = 14 + Math.random() * 20;
+      el.style.cssText = `
+        position:fixed;pointer-events:none;z-index:5;
+        font-size:${size}px;left:${startX}px;bottom:-30px;opacity:0.4;
+      `;
+      el.textContent = emoji;
+      document.body.appendChild(el);
+
+      const dx = (Math.random() - 0.5) * 100;
+      const duration = 4000 + Math.random() * 3000;
+      const startTime = performance.now();
+
+      const animate = (t) => {
+        const elapsed = t - startTime;
+        if (elapsed > duration) { el.remove(); return; }
+        const progress = elapsed / duration;
+        const x = startX + dx * progress + Math.sin(progress * Math.PI * 3) * 20;
+        const y = innerHeight - progress * (innerHeight + 60);
+        el.style.left = x + 'px';
+        el.style.bottom = 'auto';
+        el.style.top = y + 'px';
+        el.style.opacity = 0.4 * (1 - progress * 0.8);
+        el.style.transform = `rotate(${progress * 360}deg)`;
+        requestAnimationFrame(animate);
+      };
+      requestAnimationFrame(animate);
+    }, 600);
+  };
+
+  const stop = () => {
+    if (interval) { clearInterval(interval); interval = null; }
+  };
+
+  return { start, stop };
+})();
+
+// ====================== SCORE COUNTER ANIMATION ===========================
+const AnimatedCounter = (() => {
+  let currentDisplayScore = 0;
+  let targetScore = 0;
+  let animating = false;
+
+  const animateTo = (target) => {
+    targetScore = target;
+    if (animating) return;
+    animating = true;
+
+    const step = () => {
+      const diff = targetScore - currentDisplayScore;
+      if (Math.abs(diff) < 2) {
+        currentDisplayScore = targetScore;
+        document.getElementById('g-sc').textContent = fmt(currentDisplayScore);
+        animating = false;
+        return;
+      }
+      currentDisplayScore += Math.ceil(diff * 0.15);
+      document.getElementById('g-sc').textContent = fmt(currentDisplayScore);
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+
+  const reset = () => { currentDisplayScore = 0; targetScore = 0; animating = false; };
+
+  return { animateTo, reset };
+})();
+
+// ==================== MOVE RATING SYSTEM ==================================
+const MoveRating = (() => {
+  const rate = (matchCount, comboLevel) => {
+    if (matchCount >= 8 || comboLevel >= 5) return { text: 'INCREDIBLE!', color: '#e040fb' };
+    if (matchCount >= 6 || comboLevel >= 4) return { text: 'AMAZING!', color: '#ff9100' };
+    if (matchCount >= 5 || comboLevel >= 3) return { text: 'EXCELLENT!', color: '#ffea00' };
+    if (matchCount >= 4 || comboLevel >= 2) return { text: 'GREAT!', color: '#00e676' };
+    if (matchCount >= 3) return { text: 'GOOD', color: '#00e5ff' };
+    return null;
+  };
+
+  const show = (rating) => {
+    if (!rating) return;
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed;top:35%;left:50%;transform:translate(-50%,-50%);
+      font-size:1.4em;font-weight:900;color:${rating.color};
+      text-shadow:0 0 15px ${rating.color};pointer-events:none;z-index:55;
+      opacity:0;
+    `;
+    el.textContent = rating.text;
+    document.body.appendChild(el);
+
+    const startTime = performance.now();
+    const animate = (t) => {
+      const elapsed = (t - startTime) / 1000;
+      if (elapsed > 1) { el.remove(); return; }
+      if (elapsed < 0.15) {
+        el.style.opacity = elapsed / 0.15;
+        el.style.transform = `translate(-50%,-50%) scale(${0.5 + elapsed / 0.15 * 0.7})`;
+      } else {
+        el.style.opacity = 1 - (elapsed - 0.15) / 0.85;
+        el.style.transform = `translate(-50%,${-50 - (elapsed - 0.15) * 30}%) scale(1)`;
+      }
+      requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  };
+
+  return { rate, show };
+})();
+
+// ================== LOCAL LEADERBOARD =====================================
+const Leaderboard = (() => {
+  const KEY = 'jb2_lb';
+  const MAX = 10;
+
+  const getAll = () => {
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { return []; }
+  };
+
+  const add = (lvl, sc, stars) => {
+    const entries = getAll();
+    entries.push({
+      level: lvl,
+      score: sc,
+      stars: stars,
+      date: new Date().toLocaleDateString(),
+      timestamp: Date.now()
+    });
+    entries.sort((a, b) => b.score - a.score);
+    if (entries.length > MAX) entries.length = MAX;
+    try { localStorage.setItem(KEY, JSON.stringify(entries)); } catch(e) {}
+    return entries;
+  };
+
+  const isHighScore = (sc) => {
+    const entries = getAll();
+    if (entries.length < MAX) return true;
+    return sc > entries[entries.length - 1].score;
+  };
+
+  return { getAll, add, isHighScore };
+})();
+
+// =================== ENHANCED WIN SCREEN ==================================
+const showWinScreen = (stars, coinReward) => {
+  Confetti.launch(80);
+  screenShake(3, 300);
+
+  const isHigh = Leaderboard.isHighScore(score);
+  if (isHigh) {
+    Leaderboard.add(S.curLv, score, stars);
+    toast('🏆 New High Score!', 'success');
+  }
+
+  const sd = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  document.getElementById('ov-body').innerHTML = `
+    <div class="ov-title win">${isHigh ? '🏆 NEW BEST!' : 'LEVEL COMPLETE!'}</div>
+    <div class="ov-stars">${sd}</div>
+    <div class="ov-score">Score: ${fmt(score)}</div>
+    <div class="ov-det">+${coinReward} coins earned • Streak: ${StreakBonus.getStreak()}×</div>
+    <div class="ov-btns">
+      <button class="btn bp bbl" onclick="nextLv()">NEXT LEVEL ▶</button>
+      <button class="btn bo bbl" onclick="replay()">REPLAY</button>
+      <button class="btn bo bbl" onclick="toMenu()">MENU</button>
+    </div>`;
+  nav('overlay');
+};
+
+// ==================== TIMER-BASED LEVELS ==================================
+// Some levels use a timer instead of moves for extra challenge
+const TimerMode = (() => {
+  let timerInterval = null;
+  let timeLeft = 0;
+  let isTimerLevel = false;
+
+  const isActive = () => isTimerLevel;
+
+  const startTimer = (seconds) => {
+    isTimerLevel = true;
+    timeLeft = seconds;
+    updateTimerDisplay();
+
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (curScr !== 'game') return;
+      timeLeft--;
+      updateTimerDisplay();
+      if (timeLeft <= 10) {
+        Sfx.click();
+        document.getElementById('g-mv').style.color = '#ff1744';
+      }
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        if (score < cfg.tgt) setTimeout(lose, 350);
+      }
+    }, 1000);
+  };
+
+  const updateTimerDisplay = () => {
+    const min = Math.floor(timeLeft / 60);
+    const sec = timeLeft % 60;
+    document.getElementById('g-mv').textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+    document.getElementById('g-mv').style.color = timeLeft <= 10 ? '#ff1744' : '';
+  };
+
+  const addTime = (seconds) => {
+    timeLeft += seconds;
+    updateTimerDisplay();
+  };
+
+  const stop = () => {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    isTimerLevel = false;
+  };
+
+  const getTimeLeft = () => timeLeft;
+
+  return { isActive, startTimer, addTime, stop, getTimeLeft };
+})();
+
+// ============= MOVE COUNTER PULSE ANIMATION ===============================
+const pulseMoves = () => {
+  const el = document.getElementById('g-mv');
+  if (!el) return;
+  el.style.transform = 'scale(1.4)';
+  el.style.transition = 'transform 0.15s ease';
+  setTimeout(() => {
+    el.style.transform = 'scale(1)';
+    setTimeout(() => el.style.transition = '', 200);
+  }, 150);
+};
+
+// ========== ENHANCED processMatches WITH STREAK & RATING ==================
+// Override the original processMatches to include new features
+const _origProcessMatches = processMatches;
+// We enhance the game loop with additional effects
+const enhancedMatchEffects = (matchCount, comboLevel) => {
+  // Streak bonus
+  const streakMultiplier = StreakBonus.recordMatch();
+
+  // Move rating
+  const rating = MoveRating.rate(matchCount, comboLevel);
+  if (rating) MoveRating.show(rating);
+
+  // Screen shake on big matches
+  if (matchCount >= 5 || comboLevel >= 3) {
+    screenShake(matchCount, 200);
+  }
+
+  // Animated score counter
+  AnimatedCounter.animateTo(score);
+
+  // Pulse moves counter
+  pulseMoves();
+
+  return streakMultiplier;
+};
+
+// ===================== GEM TRAIL EFFECT ===================================
+const GemTrail = (() => {
+  const create = (x1, y1, x2, y2, color) => {
+    if (!S.cfg.particles) return;
+    const steps = 8;
+    for (let i = 0; i < steps; i++) {
+      setTimeout(() => {
+        const progress = i / steps;
+        const x = x1 + (x2 - x1) * progress;
+        const y = y1 + (y2 - y1) * progress;
+        const el = document.createElement('div');
+        const size = 3 + Math.random() * 4;
+        el.style.cssText = `
+          position:fixed;pointer-events:none;z-index:90;border-radius:50%;
+          width:${size}px;height:${size}px;background:${color};opacity:0.7;
+          left:${x}px;top:${y}px;
+        `;
+        document.body.appendChild(el);
+        const startTime = performance.now();
+        const animate = (t) => {
+          const elapsed = (t - startTime) / 1000;
+          if (elapsed > 0.4) { el.remove(); return; }
+          el.style.opacity = 0.7 * (1 - elapsed / 0.4);
+          el.style.transform = `scale(${1 - elapsed / 0.4})`;
+          requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+      }, i * 20);
+    }
+  };
+  return { create };
+})();
+
+// ============== LEVEL DIFFICULTY DESCRIPTIONS =============================
+const getDifficultyInfo = (level) => {
+  if (level <= 5) return { name: 'Easy', color: '#00e676', emoji: '🟢' };
+  if (level <= 15) return { name: 'Medium', color: '#ffea00', emoji: '🟡' };
+  if (level <= 25) return { name: 'Hard', color: '#ff9100', emoji: '🟠' };
+  if (level <= 40) return { name: 'Expert', color: '#ff1744', emoji: '🔴' };
+  return { name: 'Master', color: '#e040fb', emoji: '🟣' };
+};
+
+// ============== STATISTICS CALCULATIONS ===================================
+const getPlayTimeEstimate = () => {
+  // Rough estimate based on games played
+  const avgMinutes = 2.5;
+  const totalMinutes = S.games * avgMinutes;
+  if (totalMinutes < 60) return `${Math.round(totalMinutes)} min`;
+  return `${(totalMinutes / 60).toFixed(1)} hrs`;
+};
+
+const getAverageScore = () => {
+  if (S.games === 0) return 0;
+  return Math.round(S.bestScore * 0.7);
+};
+
+const getCompletionRate = () => {
+  if (S.games === 0) return '0%';
+  const completed = Object.keys(S.lvStars).length;
+  return `${Math.round((completed / S.games) * 100)}%`;
+};
+
+// ============== ENHANCED STATS RENDERING ==================================
+const renderEnhancedStats = () => {
+  const b = document.getElementById('st-body');
+  const lb = Leaderboard.getAll();
+  const diff = getDifficultyInfo(S.maxLv);
+
+  b.innerHTML = `
+    <div class="st-row gl"><span class="st-l">Games Played</span><span class="st-v">${S.games}</span></div>
+    <div class="st-row gl"><span class="st-l">Best Score</span><span class="st-v">${fmt(S.bestScore)}</span></div>
+    <div class="st-row gl"><span class="st-l">Highest Level</span><span class="st-v">${S.maxLv} ${diff.emoji}</span></div>
+    <div class="st-row gl"><span class="st-l">Difficulty</span><span class="st-v" style="color:${diff.color}">${diff.name}</span></div>
+    <div class="st-row gl"><span class="st-l">Total Matches</span><span class="st-v">${fmt(S.totMatch)}</span></div>
+    <div class="st-row gl"><span class="st-l">Total Moves</span><span class="st-v">${fmt(S.totMoves)}</span></div>
+    <div class="st-row gl"><span class="st-l">Max Combo</span><span class="st-v">${S.maxCombo}×</span></div>
+    <div class="st-row gl"><span class="st-l">Coins Earned</span><span class="st-v">${fmt(S.totCoin)}</span></div>
+    <div class="st-row gl"><span class="st-l">Power-Ups Used</span><span class="st-v">${S.puUsed}</span></div>
+    <div class="st-row gl"><span class="st-l">Daily Streak</span><span class="st-v">${S.dailyStreak} days</span></div>
+    <div class="st-row gl"><span class="st-l">Est. Play Time</span><span class="st-v">${getPlayTimeEstimate()}</span></div>
+    <div class="st-row gl"><span class="st-l">Completion Rate</span><span class="st-v">${getCompletionRate()}</span></div>
+  `;
+
+  // Leaderboard section
+  if (lb.length > 0) {
+    b.innerHTML += `<div class="ach-t">🏆 Top Scores</div>`;
+    lb.forEach((entry, idx) => {
+      const medals = ['🥇', '🥈', '🥉'];
+      const medal = idx < 3 ? medals[idx] : `#${idx + 1}`;
+      const el = document.createElement('div');
+      el.className = 'ach gl';
+      el.innerHTML = `
+        <div class="ach-ico" style="font-size:1.2em">${medal}</div>
+        <div class="ach-info">
+          <div class="ach-name">Level ${entry.level} — ${'⭐'.repeat(entry.stars)}</div>
+          <div class="ach-desc">${fmt(entry.score)} pts • ${entry.date}</div>
+        </div>`;
+      b.appendChild(el);
+    });
+  }
+
+  // Achievements
+  b.innerHTML += `<div class="ach-t">🏆 Achievements (${S.achs.length}/${ACHS.length})</div>`;
+  ACHS.forEach(a => {
+    const v = S[a.stat] || 0, done = v >= a.tgt, pct = Math.min(100, v / a.tgt * 100);
+    const el = document.createElement('div');
+    el.className = 'ach gl' + (done ? ' got' : '');
+    el.innerHTML = `<div class="ach-ico">${done ? a.icon : '🔒'}</div>
+      <div class="ach-info"><div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc} (${Math.min(v, a.tgt)}/${a.tgt})</div>
+      <div class="ach-bar"><div class="ach-fill" style="width:${pct}%"></div></div></div>`;
+    b.appendChild(el);
+  });
+};
+
+// Override renderStats to use enhanced version
+const _origRenderStats = renderStats;
+
+// =============== ENHANCED LEVEL RENDERING =================================
+const renderEnhancedLevels = () => {
+  const grid = document.getElementById('lv-grid');
+  grid.innerHTML = '';
+  const tot = Math.max(50, S.maxLv + 10);
+  for (let i = 1; i <= tot; i++) {
+    const el = document.createElement('div');
+    const ok = i <= S.maxLv, cur = i === S.curLv;
+    const diff = getDifficultyInfo(i);
+    el.className = 'lv-btn ' + (cur ? 'cur' : ok ? 'unlocked' : 'locked');
+    const st = S.lvStars[i] || 0;
+    let sh = '';
+    if (ok) for (let s = 0; s < 3; s++) sh += s < st ? '⭐' : '☆';
+    el.innerHTML = `<div>${ok ? i : '🔒'}</div><div class="lv-stars">${sh}</div>`;
+    if (ok) {
+      el.style.borderColor = diff.color + '40';
+      el.onclick = () => { S.curLv = i; play(); };
+    }
+    grid.appendChild(el);
+  }
+};
+
+// ============ SERVICE WORKER REGISTRATION (PWA-like) ======================
+// Although we can't create a separate SW file in a single HTML, we ensure
+// the game is optimized for Add to Home Screen functionality
+const setupPWAFeatures = () => {
+  // Handle display mode
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    document.body.style.paddingTop = 'env(safe-area-inset-top)';
+  }
+
+  // Handle beforeinstallprompt
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+};
+
+// ============ GAME INITIALIZATION ENHANCEMENTS ============================
+const initEnhancements = () => {
+  // Start menu floating gems
+  MenuGems.start();
+
+  // Setup PWA features
+  setupPWAFeatures();
+
+  // Start ambient music when user interacts
+  const startMusic = () => {
+    if (S.cfg.music) Music.start();
+    document.removeEventListener('pointerdown', startMusic);
+  };
+  document.addEventListener('pointerdown', startMusic);
+
+  // Initialize animated score counter
+  AnimatedCounter.reset();
+
+  // Initialize streak system
+  StreakBonus.reset();
+};
+
+// ========================= INIT ===========================================
+load();
+splash();
+initEnhancements();
+
+// Override nav to handle enhanced rendering and music
+const _origNav = nav;
+const enhancedNav = (id) => {
+  // Stop timer when leaving game
+  if (curScr === 'game' && id !== 'game') {
+    TimerMode.stop();
+  }
+
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  curScr = id;
+  Sfx.click();
+
+  // Screen-specific updates
+  if (id === 'menu') {
+    menuStats();
+    MenuGems.start();
+  } else {
+    if (id !== 'daily' && id !== 'challenge' && id !== 'overlay') MenuGems.stop();
+  }
+  if (id === 'levels') renderEnhancedLevels();
+  if (id === 'shop') renderShop();
+  if (id === 'stats') renderEnhancedStats();
+  if (id === 'settings') updateSetUI();
+  if (id === 'game') {
+    if (S.cfg.music) Music.start();
+    AnimatedCounter.reset();
+    StreakBonus.reset();
+  }
+};
+
+// Prevent defaults
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('touchmove', e => { if (curScr === 'game') e.preventDefault(); }, { passive: false });
+document.addEventListener('pointerdown', resetHintTimer);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (curScr === 'game') pause();
+    Music.stop();
+  } else {
+    if (S.cfg.music && curScr === 'game') Music.start();
+  }
+});
+addEventListener('resize', () => { if (curScr === 'game') renderBoard(); });
+
+// Keyboard shortcuts for testing on desktop
+document.addEventListener('keydown', (e) => {
+  if (curScr !== 'game' || anim) return;
+  switch (e.key) {
+    case '1': usePU('bomb'); break;
+    case '2': usePU('shuffle'); break;
+    case '3': usePU('hint'); break;
+    case '4': usePU('lightning'); break;
+    case '5': usePU('color'); break;
+    case 'Escape': pause(); break;
+  }
+});
+</script>
+</body>
+</html>
